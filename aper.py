@@ -5,6 +5,7 @@
 import numpy as np
 import pixwt
 import mmm
+where,asfarray,asarray,array,zeros,arange = np.where,np.asfarray,np.asarray,np.array,np.zeros,np.arange
 
 def aper(image,xc,yc,
          phpadu,apr,
@@ -133,18 +134,17 @@ def aper(image,xc,yc,
         skyrad = [ 0., max(apr) + 1]
 
     # Get radii of sky annulii
-    skyrad = np.array(skyrad); xc = np.array(xc); yc = np.array(yc)
-    skyrad = skyrad.astype(float)
+    skyrad = asfarray(skyrad); xc = asarray(xc); yc = asarray(yc)
 
     try: Naper = len( apr )                        #Number of apertures
     except: Naper = 1
-    if Naper == 1: apr = np.float(apr)
+    if Naper == 1: apr = float(apr)
     try: Nstars = min([ len(xc), len(yc) ])  #Number of stars to measure
     except: 
         Nstars = 1
-        xc,yc = np.array([xc]),np.array([yc])
+        xc,yc = asarray(xc),asarray(yc)
 
-    ms = np.array( ['']*Naper )       #String array to display mag for each aperture
+    ms = array( ['']*Naper )       #String array to display mag for each aperture
 
 # if keyword_set(flux) then $
 #          fmt = '(F8.1,1x,A,F7.1)' else $           #Flux format
@@ -152,8 +152,8 @@ def aper(image,xc,yc,
 # fmt2 = '(I5,2F8.2,F7.2,3A,3(/,28x,4A,:))'       #Screen format
 # fmt3 = '(I4,5F8.2,6A,2(/,44x,9A,:))'            #Print format
 
-    mags = np.zeros( [ Nstars, Naper]) ; errap =  np.zeros( [ Nstars, Naper])           #Declare arrays
-    sky = np.zeros( Nstars )        ; skyerr = np.zeros( Nstars )     
+    mags = zeros( [ Nstars, Naper]) ; errap =  zeros( [ Nstars, Naper])           #Declare arrays
+    sky = zeros( Nstars )        ; skyerr = zeros( Nstars )     
     try: area = np.pi*apr*apr                 #Area of each aperture
     except: area = np.pi*apr*apr
 
@@ -202,32 +202,32 @@ def aper(image,xc,yc,
     uy = (yc+skyrad[1]).astype(int)             #   #Upper limit Y direction
 
     if Nstars == 1:
-        lx,ly,ux,uy = np.array([lx]),np.array([ly]),np.array([ux]),np.array([uy])
-    lx[np.where(lx < 0)[0]] = 0
+        lx,ly,ux,uy = array([lx]),array([ly]),array([ux]),array([uy])
+    lx[where(lx < 0)[0]] = 0
 
-    ux[np.where(ux > ncol-1)[0]] = ncol-1
+    ux[where(ux > ncol-1)[0]] = ncol-1
     nx = ux-lx+1                         #Number of pixels X direction
     ly = (yc-skyrad[1]).astype(int)           #Lower limit Y direction
-    ly[np.where(ly < 0)[0]] = 0
+    ly[where(ly < 0)[0]] = 0
 
-    uy[np.where(uy > nrow-1)[0]] = nrow-1
+    uy[where(uy > nrow-1)[0]] = nrow-1
     ny = uy-ly +1                        #Number of pixels Y direction
     dx = xc-lx                         #X coordinate of star's centroid in subarray
     dy = yc-ly                         #Y coordinate of star's centroid in subarray
      
     if type(dx) == np.ndarray:
-        edge = np.zeros(len(dx))
+        edge = zeros(len(dx))
         for i,dx1,nx1,dy1,ny1 in zip(range(len(dx)),dx,nx,dy,ny):
             edge[i] = min([(dx1-0.5),(nx1+0.5-dx1),(dy1-0.5),(ny1+0.5-dy1)]) #Closest edge to array
     else:
         edge = min([(dx-0.5),(nx+0.5-dx),(dy-0.5),(ny+0.5-dy)]) #Closest edge to array
-    badstar = np.zeros(len(xc))
-    badstar[np.where((xc < 0.5) | 
+    badstar = zeros(len(xc))
+    badstar[where((xc < 0.5) | 
                      (xc > ncol-1.5) | #Stars too close to the edge
                      (yc < 0.5) | 
                      (yc > nrow-1.5))[0]] = 1
      #
-    badindex = np.where( badstar)[0]              #Any stars outside image
+    badindex = where( badstar)[0]              #Any stars outside image
     nbad = len(badindex)
     if ( nbad > 0 ):
         print('WARNING - ' + strn(nbad) + ' star positions outside image')
@@ -238,15 +238,15 @@ def aper(image,xc,yc,
         badval = 99.999
         baderr = 9.999
     if Naper == 1: 
-        apr = np.array([apr]); area = np.array([area])
+        apr = array([apr]); area = array([area])
         if exact:
-            smallrad = np.array([smallrad]); bigrad = np.array([bigrad])
+            smallrad = array([smallrad]); bigrad = array([bigrad])
  
     for i in range(Nstars):           #Compute magnitudes for each star
         for v in range(1):     # bogus loop to replicate IDL GOTO
-            apmag = np.array([badval]*Naper)   ; magerr = np.array([baderr]*Naper)
+            apmag = array([badval]*Naper)   ; magerr = array([baderr]*Naper)
             skymod = 0. ; skysig = 0. ;  skyskw = 0.  #Sky mode sigma and skew
-            error1 = np.array([badval]*Naper)   ; error2 = np.array([badval]*Naper)   ; error3 = np.array([badval]*Naper)
+            error1 = array([badval]*Naper)   ; error2 = array([badval]*Naper)   ; error3 = array([badval]*Naper)
             if badstar[i]:    #
                 break
 
@@ -255,7 +255,7 @@ def aper(image,xc,yc,
             #  RSQ will be an array, the same size as ROTBUF containing the square of
             #      the distance of each pixel to the center pixel.
 
-            dxsq = ( np.arange( nx[i] ) - dx[i] )**2
+            dxsq = ( arange( nx[i] ) - dx[i] )**2
             rsq = np.ones( [ny[i], nx[i]] )
             for ii  in range(ny[i]):
                 rsq[ii,:] = dxsq + (ii-dy[i])**2
@@ -275,13 +275,13 @@ def aper(image,xc,yc,
             if setskyval == -99:
 
                 skypix = rsq*0
-                skypix[np.where(( rsq >= rinsq ) & 
-                                ( rsq <= routsq ))[0]] = 1
-                skypix[np.where(((rotbuf < badpix[0]) | 
-                                (rotbuf > badpix[1])) &
-                                (skypix == 1))[0]] = 0
+                skypix[where(( rsq >= rinsq ) & 
+                             ( rsq <= routsq ))[0]] = 1
+                skypix[where(((rotbuf < badpix[0]) | 
+                              (rotbuf > badpix[1])) &
+                             (skypix == 1))[0]] = 0
                 
-                sindex =  np.where(skypix)[0]
+                sindex =  where(skypix)[0]
                 nsky = len(sindex)
                 if nsky > maxsky: nsky = maxsky
                 # nsky =   nsky < maxsky   #Must be less than MAXSKY pixels
@@ -292,7 +292,7 @@ def aper(image,xc,yc,
                         # apmag[:] = -99.999
                     break
 
-                skybuf = rotbuf[ sindex[0:nsky] ]     
+                skybuf = rotbuf[ sindex[0:nsky] ]
                 if meanback:
                     meanclip,skybuf,skymod,skysig, \
                         CLIPSIG=clipsig, MAXITER=maxiter, CONVERGE_NUM=converge_num
@@ -326,7 +326,6 @@ def aper(image,xc,yc,
             for k in range(Naper):      #Find pixels within each aperture
              
                 if ( edge[i] >= apr[k] ):   #Does aperture extend outside the image?
-#                    apmag[k] = -1.0e36
                     if exact:
                         mask = np.zeros([ny[i],nx[i]])
                         mask = mask.reshape(ny[i]*nx[i])
@@ -350,17 +349,17 @@ def aper(image,xc,yc,
                     else:
                         #
                         rshapey,rshapex = np.shape(r)[0],np.shape(r)[1]
-                        thisap = np.where( r.reshape(rshapey*rshapex) < apr[k] )[0]   #Select pixels within radius
+                        thisap = where( r.reshape(rshapey*rshapex) < apr[k] )[0]   #Select pixels within radius
                         thisapd = rotbuf.reshape(rshapey*rshapex)[thisap]
                         thisapr = r.reshape(rshapey*rshapex)[thisap]
                         fractn = apr[k]-thisapr 
-                        fractn[np.where(fractn > 1)[0]] = 1
-                        fractn[np.where(fractn < 0)[0]] = 0          # Fraction of pixels to count
+                        fractn[where(fractn > 1)[0]] = 1
+                        fractn[where(fractn < 0)[0]] = 0          # Fraction of pixels to count
                         full = np.zeros(len(fractn))
-                        full[np.where(fractn == 1)[0]] = 1.0
-                        gfull = np.where(full)[0]
+                        full[where(fractn == 1)[0]] = 1.0
+                        gfull = where(full)[0]
                         Nfull = len(gfull)
-                        gfract = np.where(1 - full)[0]
+                        gfract = where(1 - full)[0]
                         factor = (area[k] - Nfull ) / np.sum(fractn[gfract])
                         fractn[gfract] = fractn[gfract]*factor
                          
@@ -382,14 +381,14 @@ def aper(image,xc,yc,
 
 
             if flux: 
-                g = np.where(np.isfinite(apmag))[0]  
+                g = where(np.isfinite(apmag))[0]  
             else:
-                g = np.where(np.abs(apmag - badval) > 0.01)[0]
+                g = where(np.abs(apmag - badval) > 0.01)[0]
             Ng = len(g)
             if Ng > 0:
                 apmag[g] = apmag[g] - skymod*area[g]  #Subtract sky from the integrated brightnesses
      
-            good = np.where (apmag > 0.0)[0]     #Are there any valid integrated fluxes?
+            good = where (apmag > 0.0)[0]     #Are there any valid integrated fluxes?
             Ngood = len(good)
      
             if ( Ngood > 0 ):               #If YES then compute errors

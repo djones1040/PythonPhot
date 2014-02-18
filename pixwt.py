@@ -2,6 +2,8 @@
 # D. Jones - 2/13/14
 """This code is from the IDL Astronomy Users Library"""
 import numpy as np
+where,abs,sqrt,greater,less_equal,less,greater_equal = \
+    np.where,np.abs,np.sqrt,np.greater,np.less_equal,np.less,np.greater_equal
 
 def Pixwt(xc, yc, r, x, y):
     """; ---------------------------------------------------------------------------
@@ -102,8 +104,8 @@ def Oneside( x, y0, y1, r):
 
     if size_x[ 0 ] == 0:
       if x == 0: return x
-      elif np.abs( x ) >= r: return Arc( x, y0, y1, r )
-      yh = np.sqrt( r*r - x*x )
+      elif abs( x ) >= r: return Arc( x, y0, y1, r )
+      yh = sqrt( r*r - x*x )
       if ( y0 <= -yh ):
           if ( y1 <= -yh ) : return Arc( x, y0, y1, r )
           elif ( y1 <=  yh ) : return Arc( x, y0, -yh, r ) \
@@ -125,41 +127,41 @@ def Oneside( x, y0, y1, r):
 
     else :
         ans2 = x
-        t0 = np.where( x == 0)[0]
+        t0 = where( x == 0)[0]
         count = len(t0)
         if count == len( x ): return ans2
 
         ans = x * 0
         yh = x * 0
-        to = np.where( np.abs( x ) >= r)[0]
+        to = where( abs( x ) >= r)[0]
         tocount = len(to)
-        ti = np.where( np.abs( x ) < r)[0]
+        ti = where( abs( x ) < r)[0]
         ticount = len(ti)
         if tocount != 0: ans[ to ] = Arc( x[to], y0[to], y1[to], r )
         if ticount == 0: return ans
         
-        yh[ ti ] = np.sqrt( r*r - x[ti]*x[ti] )
+        yh[ ti ] = sqrt( r*r - x[ti]*x[ti] )
         
-        t1 = np.where( np.less_equal(y0[ti],-yh[ti]) )[0]
+        t1 = where( np.less_equal(y0[ti],-yh[ti]) )[0]
         count = len(t1)
         if count != 0:
             i = ti[ t1 ]
 
-            t2 = np.where( np.less_equal(y1[i],-yh[i]))[0]
+            t2 = where( np.less_equal(y1[i],-yh[i]))[0]
             count = len(t2)
             if count != 0:
                 j = ti[ t1[ t2 ] ]
                 ans[j] =  Arc( x[j], y0[j], y1[j], r )
 
-            t2 = np.where( ( np.greater(y1[i],-yh[i]) ) &
-                           ( np.less_equal(y1[i],yh[i]) ))[0]
+            t2 = where( ( greater(y1[i],-yh[i]) ) &
+                        ( less_equal(y1[i],yh[i]) ))[0]
             count = len(t2)
             if count != 0:
                 j = ti[ t1[ t2 ] ]
                 ans[j] = Arc( x[j], y0[j], -yh[j], r ) \
                     + Chord( x[j], -yh[j], y1[j] )
 
-            t2 = np.where( np.greater(y1[i], yh[i]) )[0]
+            t2 = where( greater(y1[i], yh[i]) )[0]
             count = len(t2)
 
             if count != 0:
@@ -168,13 +170,13 @@ def Oneside( x, y0, y1, r):
                     + Chord( x[j], -yh[j], yh[j] ) \
                     + Arc( x[j], yh[j], y1[j], r )
         
-        t1 = np.where( ( np.greater(y0[ti],-yh[ti]) ) & 
-                      ( np.less(y0[ti],yh[ti]) ))[0] 
+        t1 = where( ( greater(y0[ti],-yh[ti]) ) & 
+                    ( less(y0[ti],yh[ti]) ))[0] 
         count = len(t1)
         if count != 0:
             i = ti[ t1 ]
 
-            t2 = np.where( np.less_equal(y1[i],-yh[i]))[0]
+            t2 = where( np.less_equal(y1[i],-yh[i]))[0]
             count = len(t2)
             if count != 0:
                 j = ti[ t1[ t2 ] ]
@@ -182,27 +184,27 @@ def Oneside( x, y0, y1, r):
                     + Arc( x[j], -yh[j], y1[j], r )
          
 
-            t2 = np.where( ( np.greater(y1[i], -yh[i]) ) & 
-                           ( np.less_equal(y1[i], yh[i]) ))[0]
+            t2 = where( ( greater(y1[i], -yh[i]) ) & 
+                        ( less_equal(y1[i], yh[i]) ))[0]
             count = len(t2)
 
             if count != 0:
                 j = ti[ t1[ t2 ] ]
                 ans[j] = Chord( x[j], y0[j], y1[j] )
 
-            t2 = np.where( np.greater(y1[i], yh[i]))[0]
+            t2 = where( greater(y1[i], yh[i]))[0]
             count = len(t2)
             if count != 0:
                 j = ti[ t1[ t2 ] ]
                 ans[j] = Chord( x[j], y0[j], yh[j] ) \
                     + Arc( x[j], yh[j], y1[j], r )
 
-        t1 = np.where( np.greater_equal(y0[ti], yh[ti]))[0] 
+        t1 = where( greater_equal(y0[ti], yh[ti]))[0] 
         count = len(t1)
         if count != 0:
             i = ti[ t1 ]
 
-            t2 = np.where ( np.less_equal(y1[i], -yh[i]))[0] 
+            t2 = where ( np.less_equal(y1[i], -yh[i]))[0] 
             count = len(t2)
             if count != 0:
                 j = ti[ t1[ t2 ] ]
@@ -210,15 +212,15 @@ def Oneside( x, y0, y1, r):
                     + Chord( x[j], yh[j], -yh[j] ) \
                     + Arc( x[j], -yh[j], y1[j], r )
 
-            t2 = np.where( ( np.greater(y1[i], -yh[i]) ) & 
-                           ( np.less_equal(y1[i], yh[i]) ))[0]
+            t2 = where( ( greater(y1[i], -yh[i]) ) & 
+                        ( less_equal(y1[i], yh[i]) ))[0]
             count = len(t2)
             if count != 0:
                 j = ti[ t1[ t2 ] ]
                 ans[j] = Arc( x[j], y0[j], yh[j], r ) \
                     + Chord( x[j], yh[j], y1[j] )
 
-            t2 = np.where( np.greater(y1[i], yh[i]))[0]
+            t2 = where( greater(y1[i], yh[i]))[0]
             count = len(t2)
             if count != 0:
                 j = ti[ t1[ t2 ] ]

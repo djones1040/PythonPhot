@@ -120,7 +120,7 @@ def mmm( sky_vector,
         print('Processing '+str(nsky) + ' element array')
     sz_sky = np.shape(sky_vector)
 
-    sky = sky_vector[ np.argsort( sky_vector ) ]    #Sort SKY in ascending values
+    sky = np.sort(sky_vector)    #Sort SKY in ascending values
 
     skymid = 0.5*sky[(nsky-1)/2] + 0.5*sky[nsky/2]  #Median value of all sky values
        
