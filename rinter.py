@@ -2,6 +2,8 @@
 # D. Jones - 2/13/14
 """This code is from the IDL Astronomy Users Library"""
 import numpy as np
+shape,array,sqrt,asarray,zeros,concatenate = \
+    np.shape,np.array,np.sqrt,np.asarray,np.zeros,np.concatenate
 
 def rinter(p, x, y, 
            deriv = True, initialize = False,
@@ -81,18 +83,18 @@ def rinter(p, x, y,
     ;-"""
 
     reshape_flag = False
-    if len(np.shape(x)) > 1:
+    if len(shape(x)) > 1:
         reshape_flag = True
-        xshape = np.shape(x)
-        yshape = np.shape(y)
+        xshape = shape(x)
+        yshape = shape(y)
         x = x.reshape(xshape[0]*xshape[1])
         y = y.reshape(yshape[0]*yshape[1])
 
     if not ps1d:
-        c = np.shape(p)
+        c = shape(p)
     else:
-        plen = int(np.sqrt(len(p)))
-        c = np.array([plen,plen])
+        plen = int(sqrt(len(p)))
+        c = asarray([plen,plen])
     if len(c) != 2:    
         print('Input array (first parameter) must be 2 dimensional')
 
@@ -110,7 +112,7 @@ def rinter(p, x, y,
         c3 = 0.5*(3.*(p-p1) + p2 - p_1)
         init = 1
  
-    sx = np.shape(x)
+    sx = shape(x)
 #    npts = sx[len(sx)+2]
 #    if c[3] < 4: c[3] = 4     #Make sure output array at least REAL
 
@@ -125,27 +127,27 @@ def rinter(p, x, y,
     if not initialize: init = 0    #Has COMMON block been initialized?
     
     if not ps1d:
-        pshape = np.shape(p)
+        pshape = shape(p)
         p = p.reshape(pshape[0]*pshape[1])
     if init == 0:
 
-        xgood = np.concatenate((x_1,x0,x1,x2))
-
-        num = np.histogram( xgood, range=[0,max(xgood)+2], bins=range(int(max(xgood)+2)))[0]
-        xgood = np.where( num >= 1 )[0] 
+        xgood = concatenate((x_1,x0,x1,x2))
+#        num = np.histogram( xgood, range=[0,max(xgood)+2], bins=range(int(max(xgood)+2)))[0]
+#        xgood = np.where( num >= 1 )[0] 
+        xgood = np.unique(xgood)
 
         # D. Jones - IDL lets you creatively subscript arrays,
         # so I had to add in some extra steps
 
         if max(xgood) > len(p)-3:
-            p_new = np.zeros(max(xgood)+3)
+            p_new = zeros(max(xgood)+3)
             plen = len(p)
             p_new[0:plen] = p
             p_new[plen:] = p[plen-1]
 
             c1 = p*0. ; c2 = p*0. ; c3 = p*0.
             c1_new,c2_new,c3_new = \
-                np.zeros(max(xgood)+3),np.zeros(max(xgood)+3),np.zeros(max(xgood)+3)
+                zeros(max(xgood)+3),zeros(max(xgood)+3),zeros(max(xgood)+3)
             clen = len(c1)
             c1_new[0:clen],c2_new[0:clen],c3_new[0:clen] = c1,c2,c3
             c1_new[clen:],c2_new[clen:],c3_new[clen:] = \
@@ -158,7 +160,6 @@ def rinter(p, x, y,
             c3_new[xgood] = 0.5*(3.*(p0 - p1) + p2 - p_1)
             
             x0,x1,x2,x_1 = x0.astype(int),x1.astype(int),x2.astype(int),x_1.astype(int)
-
 
             y_1 = xdist*( xdist*( xdist*c3_new[x_1] +c2_new[x_1]) + \
                               c1_new[x_1]) + p_new[x_1]
@@ -221,8 +222,8 @@ def rinter(p, x, y,
 
         z = array(z).reshape(sx[0],sx[1] ) 
         if deriv:      #Create output derivative arrays?
-            dfdx = array(dfdx).reshape(sx[1],sx[0])
-            dfdy = array(dfdy).reshape(sx[1],sx[0])
+            dfdx = asarray(dfdx).reshape(sx[1],sx[0])
+            dfdy = asarray(dfdy).reshape(sx[1],sx[0])
 
 
     if deriv:

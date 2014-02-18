@@ -202,7 +202,7 @@ def aper(image,xc,yc,
     uy = (yc+skyrad[1]).astype(int)             #   #Upper limit Y direction
 
     if Nstars == 1:
-        lx,ly,ux,uy = array([lx]),array([ly]),array([ux]),array([uy])
+        lx,ly,ux,uy = asarray(lx),asarray(ly),asarray(ux),asarray(uy)
     lx[where(lx < 0)[0]] = 0
 
     ux[where(ux > ncol-1)[0]] = ncol-1
@@ -244,9 +244,9 @@ def aper(image,xc,yc,
  
     for i in range(Nstars):           #Compute magnitudes for each star
         for v in range(1):     # bogus loop to replicate IDL GOTO
-            apmag = array([badval]*Naper)   ; magerr = array([baderr]*Naper)
+            apmag = asarray([badval]*Naper)   ; magerr = asarray([baderr]*Naper)
             skymod = 0. ; skysig = 0. ;  skyskw = 0.  #Sky mode sigma and skew
-            error1 = array([badval]*Naper)   ; error2 = array([badval]*Naper)   ; error3 = array([badval]*Naper)
+            error1 = asarray([badval]*Naper)   ; error2 = asarray([badval]*Naper)   ; error3 = array([badval]*Naper)
             if badstar[i]:    #
                 break
 
@@ -327,22 +327,22 @@ def aper(image,xc,yc,
              
                 if ( edge[i] >= apr[k] ):   #Does aperture extend outside the image?
                     if exact:
-                        mask = np.zeros([ny[i],nx[i]])
+                        mask = zeros([ny[i],nx[i]])
                         mask = mask.reshape(ny[i]*nx[i])
                         x1,y1 = x1.reshape(ny[i]*nx[i]),y1.reshape(ny[i]*nx[i])
-                        good = np.where( ( x1 < smallrad[k] ) & (y1 < smallrad[k] ))[-1]
+                        good = where( ( x1 < smallrad[k] ) & (y1 < smallrad[k] ))[-1]
                         Ngood = len(good)
                         if Ngood > 0: mask[good] = 1.0
-                        bad = np.where(  (x1 > bigrad[k]) | (y1 > bigrad[k] ))[-1]
+                        bad = where(  (x1 > bigrad[k]) | (y1 > bigrad[k] ))[-1]
                         mask[bad] = -1
 
-                        gfract = np.where(mask == 0.0)[0] 
+                        gfract = where(mask == 0.0)[0] 
                         Nfract = len(gfract)
                         if Nfract > 0:
                             yygfract = yy.reshape(ny[i]*nx[i])[gfract]; xxgfract = xx.reshape(ny[i]*nx[i])[gfract] 
                             mask[gfract] = pixwt.Pixwt(dx[i],dy[i],apr[k],xxgfract,yygfract)
-                            mask[gfract[np.where(mask[gfract] < 0.0)[0]]] = 0.0
-                        thisap = np.where(mask > 0.0)[0]
+                            mask[gfract[where(mask[gfract] < 0.0)[0]]] = 0.0
+                        thisap = where(mask > 0.0)[0]
 
                         thisapd = rotbuf[thisap]
                         fractn = mask[thisap]
@@ -355,7 +355,7 @@ def aper(image,xc,yc,
                         fractn = apr[k]-thisapr 
                         fractn[where(fractn > 1)[0]] = 1
                         fractn[where(fractn < 0)[0]] = 0          # Fraction of pixels to count
-                        full = np.zeros(len(fractn))
+                        full = zeros(len(fractn))
                         full[where(fractn == 1)[0]] = 1.0
                         gfull = where(full)[0]
                         Nfull = len(gfull)

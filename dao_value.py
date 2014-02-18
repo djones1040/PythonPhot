@@ -4,6 +4,7 @@
 import numpy as np
 import daoerf
 import rinter
+min,max,shape = np.min,np.max,np.shape
 
 def dao_value(xx,yy,gauss,psf,psf1d='',deriv=True,ps1d=True):
     """FUNCTION  DAO_VALUE, XX, YY, GAUSS, PSF, DVDX, DVDY
@@ -55,7 +56,7 @@ def dao_value(xx,yy,gauss,psf,psf1d='',deriv=True,ps1d=True):
     Converted to IDL V5.0   W. Landsman   September 1997
     -"""
 
-    s = np.shape(psf)
+    s = shape(psf)
     npsf = s[1]
     half = float(npsf-1)/2. 
 
@@ -65,8 +66,8 @@ def dao_value(xx,yy,gauss,psf,psf1d='',deriv=True,ps1d=True):
     # X and Y are the coordinates relative to the corner of the look-up table, 
     # which has a half-pixel grid size.  
 
-    if ( (np.min(x) < 1.) or ( np.max(x) > npsf-2.) or \
-             (np.min(y) < 1.) or ( np.max(y) > npsf-2.) ):
+    if ( (min(x) < 1.) or ( max(x) > npsf-2.) or \
+             (min(y) < 1.) or ( max(y) > npsf-2.) ):
          print('X,Y positions too close to edge of frame')
 
          if deriv:
@@ -90,7 +91,8 @@ def dao_value(xx,yy,gauss,psf,psf1d='',deriv=True,ps1d=True):
         if ps1d: 
             value = e + value        
         else:
-            value = e.reshape(np.shape(value)[0],np.shape(value)[1]) + value
+            valshape = shape(value)
+            value = e.reshape(valshape[0],valshape[1]) + value
         dvdx = 2.*dfdx - pder[1,:]
         dvdy = 2.*dfdy - pder[2,:]           
         return(value,dvdx,dvdy)
@@ -101,6 +103,7 @@ def dao_value(xx,yy,gauss,psf,psf1d='',deriv=True,ps1d=True):
             value = e + rinter.rinter(psf,x,y,deriv=False, ps1d = True)
         else:
             value = rinter.rinter(psf,x,y,deriv=False, ps1d = False)
-            value = e.reshape(np.shape(value)[0],np.shape(value)[1]) + value
+            valshape = shape(value)
+            value = e.reshape(valshape[0],valshape[1]) + value
 
         return(value)

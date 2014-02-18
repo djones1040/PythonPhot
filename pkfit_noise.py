@@ -63,20 +63,23 @@ from numpy import sqrt
 from scipy import linalg
 import dao_value
 
+sqrt,where,abs,shape,zeros,array,isnan,\
+    arange,matrix,exp,sum,isinf,median,ones,bool = \
+    np.sqrt,np.where,np.abs,np.shape,\
+    np.zeros,np.array,np.isnan,\
+    np.arange,np.matrix,np.exp,\
+    np.sum,np.isinf,np.median,np.ones,np.bool
+
 def pkfit_noise(f,scale,x,y,sky,radius,
                 ronois,phpadu,gauss,psf,
                 fnoise, fmask,
                 debug=False,debug2=False,
                 xyout = False):
-    sqrt,where,abs,shape,zeros,array,isnan,\
-        arange,matrix,exp,npsum,isinf,median = \
-        np.sqrt,np.where,np.abs,np.shape,\
-        np.zeros,np.array,np.isnan,\
-        np.arange,np.matrix,np.exp,np.sum,np.isinf,np.median
 
     if debug2:
         import time
         tstart = time.time()
+    if f.dtype != 'float64': f = f.astype('float64')
 
     psf1d = psf.reshape(shape(psf)[0]**2.) 
     s = shape(f) #Get array dimensions
@@ -331,7 +334,7 @@ def pkfit_noise(f,scale,x,y,sky,radius,
             chi = 1.2533*chi*sqrt(1./(sumwt*(sumwt-3.)))
             chiold = ((sumwt-3.)*chi+3.)/sumwt
 
-        if not isnan(npsum(c)):
+        if not isnan(sum(c)):
             try:
                 c = linalg.inv(c)  #Invert the normal matrix
             except:
@@ -398,7 +401,9 @@ def pkfit_noise(f,scale,x,y,sky,radius,
 
 def item_remove(index,array):
 
-    array = np.delete(array,index)
+    mask = ones(array.shape,dtype=bool)
+    mask[index] = False
+    smaller_array = array[mask]
 
-    return(array)
+    return(smaller_array)
 
