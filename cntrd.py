@@ -133,8 +133,8 @@ def cntrd(img, x, y,
             bigbox = img[iy[i]-nhalfbig : iy[i]+nhalfbig+1, ix[i]-nhalfbig : ix[i]+nhalfbig+1]
 
             #  Locate maximum pixel in 'NBIG' sized subimage 
-
-            mx = np.max( bigbox)     #Maximum pixel value in BIGBOX
+            goodrow = np.where(bigbox == bigbox)
+            mx = np.max( bigbox[goodrow])     #Maximum pixel value in BIGBOX
             mx_pos = np.where(bigbox.reshape(np.shape(bigbox)[0]*np.shape(bigbox)[1]) == mx)[0] #How many pixels have maximum value?
             Nmax = len(mx_pos)
             idx = mx_pos % nbig          #X coordinate of Max pixel
