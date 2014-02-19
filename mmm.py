@@ -12,7 +12,8 @@ def mmm( sky_vector,
          integer = "discrete",
          mxiter = 50,
          silent = False,
-         minsky = 20):
+         minsky = 20,
+         nan=True):
     """;+
     ; NAME:
     ;       MMM
@@ -108,6 +109,7 @@ def mmm( sky_vector,
     ;       Added MINSKY keyword W.L. December 2011
     ;-"""
 
+    if nan: sky_vector = sky_vector[np.where(sky_vector == sky_vector)]
     nsky = len( sky_vector )            #Get number of sky elements 
  
     if nsky < minsky:
