@@ -129,8 +129,8 @@ def cntrd(img, x, y,
                     print('Position '+ pos + ' too near edge of image')
                     xcen[i] = -1   ; ycen[i] = -1
                     continue
-
-            bigbox = img[iy[i]-nhalfbig : iy[i]+nhalfbig+1, ix[i]-nhalfbig : ix[i]+nhalfbig+1]
+            
+            bigbox = img[int(iy[i]-nhalfbig) : int(iy[i]+nhalfbig+1), int(ix[i]-nhalfbig) : int(ix[i]+nhalfbig+1)]
 
             #  Locate maximum pixel in 'NBIG' sized subimage 
             goodrow = np.where(bigbox == bigbox)
@@ -166,7 +166,7 @@ def cntrd(img, x, y,
 #
 #;  Extract smaller 'STRBOX' sized subimage centered on maximum pixel 
 
-        strbox = img[ymax-nhalf : ymax+nhalf+1, xmax-nhalf : xmax+nhalf+1]
+        strbox = img[int(ymax-nhalf) : int(ymax+nhalf+1), int(xmax-nhalf) : int(xmax+nhalf+1)]
 # if (dtype NE 4) and (dtype NE 5) then strbox = float(strbox)
 
         if debug:
