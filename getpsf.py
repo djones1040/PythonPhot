@@ -377,7 +377,7 @@ def getpsf(image,xc,yc,
         hdu.header['NSTARS'] = goodstarlen #, '# of Stars Used to Create PSF'
         hdu.data = psf
         hdu.writeto(psfname,clobber=True)
-        return(gauss,psf,goodstar)
+        return(gauss,psf,psfmag)
 
     else: 
         goodstarlen = len(goodstar)
@@ -386,7 +386,7 @@ def getpsf(image,xc,yc,
         hdu.data = psf
         hdu.writeto(psfname,clobber=True)
 
-        return(gauss,psf,goodstar[-1])
+        return(gauss,psf,psfmag)
 
 
 
