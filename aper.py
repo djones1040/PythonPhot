@@ -20,7 +20,8 @@ def aper(image,xc,yc,
          minsky=[],
          meanback=False,
          readnoise = 0,
-         nan = False):
+         nan = False,
+         debug=False):
     """;+
     ; NAME:
     ;      APER
@@ -115,6 +116,10 @@ def aper(image,xc,yc,
     ;       Fix chk_badpixel problem introduced Jan 01 C. Ishida/W.L. February 2001 
     ;-"""
 
+    if debug:
+        import time
+        tstart = time.time()
+
     #             Set parameter limits
     if len(minsky) == 0: minsky = 20
     maxrad = 100.          #Maximum outer radius permitted for the sky annulus.
@@ -202,12 +207,11 @@ def aper(image,xc,yc,
     uy = (yc+skyrad[1]).astype(int)             #   #Upper limit Y direction
 
     if Nstars == 1:
-        lx,ly,ux,uy = asarray(lx),asarray(ly),asarray(ux),asarray(uy)
+        lx,ly,ux,uy,xc,yc = asarray([lx]),asarray([ly]),asarray([ux]),asarray([uy]),asarray([xc]),asarray([yc])
     lx[where(lx < 0)[0]] = 0
 
     ux[where(ux > ncol-1)[0]] = ncol-1
     nx = ux-lx+1                         #Number of pixels X direction
-    ly = (yc-skyrad[1]).astype(int)           #Lower limit Y direction
     ly[where(ly < 0)[0]] = 0
 
     uy[where(uy > nrow-1)[0]] = nrow-1
@@ -241,7 +245,9 @@ def aper(image,xc,yc,
         apr = array([apr]); area = array([area])
         if exact:
             smallrad = array([smallrad]); bigrad = array([bigrad])
- 
+
+    if debug:
+        tloop = time.time()
     for i in range(Nstars):           #Compute magnitudes for each star
         for v in range(1):     # bogus loop to replicate IDL GOTO
             apmag = asarray([badval]*Naper)   ; magerr = asarray([baderr]*Naper)
@@ -327,19 +333,21 @@ def aper(image,xc,yc,
              
                 if ( edge[i] >= apr[k] ):   #Does aperture extend outside the image?
                     if exact:
-                        mask = zeros([ny[i],nx[i]])
-                        mask = mask.reshape(ny[i]*nx[i])
+                        mask = zeros(ny[i]*nx[i])
+
                         x1,y1 = x1.reshape(ny[i]*nx[i]),y1.reshape(ny[i]*nx[i])
                         good = where( ( x1 < smallrad[k] ) & (y1 < smallrad[k] ))[-1]
                         Ngood = len(good)
-                        if Ngood > 0: mask[good] = 1.0
+                        if Ngood > 0: mask[good] = 1
                         bad = where(  (x1 > bigrad[k]) | (y1 > bigrad[k] ))[-1]
                         mask[bad] = -1
 
                         gfract = where(mask == 0.0)[0] 
                         Nfract = len(gfract)
                         if Nfract > 0:
-                            yygfract = yy.reshape(ny[i]*nx[i])[gfract]; xxgfract = xx.reshape(ny[i]*nx[i])[gfract] 
+                            yygfract = yy.reshape(ny[i]*nx[i])[gfract]
+                            xxgfract = xx.reshape(ny[i]*nx[i])[gfract] 
+
                             mask[gfract] = pixwt.Pixwt(dx[i],dy[i],apr[k],xxgfract,yygfract)
                             mask[gfract[where(mask[gfract] < 0.0)[0]]] = 0.0
                         thisap = where(mask > 0.0)[0]
@@ -419,5 +427,9 @@ def aper(image,xc,yc,
 
 
 # if PRINT then free_lun, lun             #Close output file
+
+    if debug:
+        print('Aper took %.3f seconds'%(time.time()-tstart))
+        print('Each of %i loops took %.3f seconds'%(Nstars,(time.time()-tloop)/Nstars))
 
     return(mags,errap,sky,skyerr)
