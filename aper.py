@@ -234,7 +234,7 @@ def aper(image,xc,yc,
     badindex = where( badstar)[0]              #Any stars outside image
     nbad = len(badindex)
     if ( nbad > 0 ):
-        print('WARNING - ' + strn(nbad) + ' star positions outside image')
+        print('WARNING - ' + str(nbad) + ' star positions outside image')
     if flux:
         badval = np.nan
         baderr = badval
