@@ -72,7 +72,7 @@ sqrt,where,abs,shape,zeros,array,isnan,\
 
 def pkfit_norecent(f,scale,x,y,sky,radius,
                    ronois,phpadu,gauss,psf,
-                   debug=False):
+                   debug=False,maxiter=25):
     if f.dtype != 'float64': f = f.astype('float64')
 
     psf1d = psf.reshape(shape(psf)[0]**2.) 
@@ -96,6 +96,8 @@ def pkfit_norecent(f,scale,x,y,sky,radius,
         if isnan(x) or isnan(y):
             scale=1000000.0;
             errmag=100000
+            chi=100000
+            sharp=100000
             return(errmag,chi,sharp,niter,scale)
         
         ixlo = int(x-radius)
@@ -140,6 +142,8 @@ def pkfit_norecent(f,scale,x,y,sky,radius,
         if not len(good):
             scale=1000000.0;
             errmag=100000
+            chi=100000
+            sharp=100000
             return(errmag,chi,sharp,niter,scale)
 
         dx = dx[good % ixx]
@@ -152,6 +156,8 @@ def pkfit_norecent(f,scale,x,y,sky,radius,
         if len(dvdx) == 0:
             scale=1000000.0
             errmag=100000
+            chi=100000
+            sharp=100000
             return(errmag,chi,sharp,niter,scale)
 
         if debug: print('model created '); return(errmag,chi,sharp,niter,scale)
@@ -339,9 +345,9 @@ def pkfit_norecent(f,scale,x,y,sky,radius,
         # If the solution has gone 25 iterations, OR if the standard error of
         # the brightness is greater than 200%, give up.
 
-        if (redo and (errmag <= 1.9995) and (niter < 25) ): loop=True
-        if sharp < -99.999: sharp = -99.999
-        elif sharp > 99.999: sharp = 99.999
+        if (redo and (errmag <= 1.9995) and (niter < maxiter) ): loop=True
+#        if sharp < -99.999: sharp = -99.999
+#        elif sharp > 99.999: sharp = 99.999
 
     if debug2:
         print('pkfit took %s'%(time.time()-tstart))

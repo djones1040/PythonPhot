@@ -72,7 +72,7 @@ sqrt,where,abs,shape,zeros,array,isnan,\
 
 def pkfit_noise(f,scale,x,y,sky,radius,
                 ronois,phpadu,gauss,psf,
-                fnoise, fmask,
+                fnoise,fmask,maxiter=25,
                 debug=False,debug2=False,
                 xyout = False):
 
@@ -102,6 +102,8 @@ def pkfit_noise(f,scale,x,y,sky,radius,
         if isnan(x) or isnan(y):
             scale=1000000.0;
             errmag=100000
+            chi=100000
+            sharp=100000
             if xyout:
                 return(errmag,chi,sharp,niter,scale,x,y)
             else:
@@ -153,6 +155,8 @@ def pkfit_noise(f,scale,x,y,sky,radius,
         if not len(good):
             scale=1000000.0;
             errmag=100000
+            chi=100000
+            sharp=100000
             if xyout:
                 return(errmag,chi,sharp,niter,scale,x,y)
             else:
@@ -390,9 +394,9 @@ def pkfit_noise(f,scale,x,y,sky,radius,
         # If the solution has gone 25 iterations, OR if the standard error of
         # the brightness is greater than 200%, give up.
 
-        if (redo and (errmag <= 1.9995) and (niter < 25) ): loop=True
-        if sharp < -99.999: sharp = -99.999
-        elif sharp > 99.999: sharp = 99.999
+        if (redo and (errmag <= 1.9995) and (niter < maxiter) ): loop=True
+#        if sharp < -99.999: sharp = -99.999
+#        elif sharp > 99.999: sharp = 99.999
 
     if xyout:
         return(errmag,chi,sharp,niter,scale,x,y)

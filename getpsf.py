@@ -344,10 +344,10 @@ def getpsf(image,xc,yc,
 
         psfmag = -2.5*np.log10((1.+scale)*10**(-0.4*psfmag))
         gauss[0] = gauss[0]*(1.+scale)
-        try:
-            goodstar = np.concatenate(( np.array(goodstar), nstrps))
-        except:
-            goodstar = np.array([goodstar,nstrps])
+#        try:
+        goodstar = np.append(np.array(goodstar), np.array(nstrps))
+#        except:
+#            goodstar = np.array([goodstar,nstrps])
 
     # WRITEOUT:   
 
@@ -385,7 +385,6 @@ def getpsf(image,xc,yc,
         hdu.header['NSTARS'] = goodstarlen #, '# of Stars Used to Create PSF'
         hdu.data = psf
         hdu.writeto(psfname,clobber=True)
-
         return(gauss,psf,psfmag)
 
 

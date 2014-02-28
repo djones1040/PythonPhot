@@ -72,7 +72,7 @@ sqrt,where,abs,shape,zeros,array,isnan,\
 
 def pkfit_norecent_noise(f,scale,x,y,sky,radius,
                          ronois,phpadu,gauss,psf,
-                         fnoise,fmask,
+                         fnoise,fmask,maxiter=25,
                          debug=False,debug2=False):
 
     if debug2:
@@ -98,6 +98,8 @@ def pkfit_norecent_noise(f,scale,x,y,sky,radius,
     if isnan(x) or isnan(y):
         scale=1000000.0;
         errmag=100000
+        chi=100000
+        sharp=100000
         return(errmag,chi,sharp,niter,scale)
 
     loop=True
@@ -159,14 +161,14 @@ def pkfit_norecent_noise(f,scale,x,y,sky,radius,
 #        sbd=shape(badpix)
 #        sdf=shape(df)
 
-        if not len(good):
+        if not len(good[0]):
             # D. Jones - modified from Scolnic
             print 'good', good[0]
-            print len(badpix), len(df)
             print 'Return1'
             scale=1000000.0;
             errmag=100000
             chi=100000
+            sharp=100000
             return(errmag,chi,sharp,niter,scale)
 
         dx = dx[good[1]]# % ixx]
@@ -174,6 +176,7 @@ def pkfit_norecent_noise(f,scale,x,y,sky,radius,
         model,dvdx,dvdy = dao_value.dao_value(dx, dy, gauss, 
                                               psf, psf1d=psf1d, 
                                               deriv=True,ps1d=True)
+
 #        mshape = shape(model)
 #        if len(mshape) > 2:
 #            model = model.reshape(mshape[0]*mshape[1])
@@ -183,6 +186,8 @@ def pkfit_norecent_noise(f,scale,x,y,sky,radius,
             print 'Return2'
             scale=1000000.0
             errmag=100000
+            chi=100000
+            sharp=100000
             return(errmag,chi,sharp,niter,scale)
 
         if debug: print('model created '); return(errmag,chi,sharp,niter,scale)
@@ -428,9 +433,9 @@ def pkfit_norecent_noise(f,scale,x,y,sky,radius,
         # If the solution has gone 25 iterations, OR if the standard error of
         # the brightness is greater than 200%, give up.
 
-        if (redo and (errmag <= 1.9995) and (niter < 25) ): loop=True
-        if sharp < -99.999: sharp = -99.999
-        elif sharp > 99.999: sharp = 99.999
+        if (redo and (errmag <= 1.9995) and (niter < maxiter) ): loop=True
+#        if sharp < -99.999: sharp = -99.999
+#        elif sharp > 99.999: sharp = 99.999
 
     if debug2:
         print('pkfit took %s'%(time.time()-tstart))

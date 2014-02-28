@@ -66,14 +66,22 @@ def dao_value(xx,yy,gauss,psf,psf1d='',deriv=True,ps1d=True):
     # X and Y are the coordinates relative to the corner of the look-up table, 
     # which has a half-pixel grid size.  
 
-    if ( (min(x) < 1.) or ( max(x) > npsf-2.) or \
-             (min(y) < 1.) or ( max(y) > npsf-2.) ):
-         print('X,Y positions too close to edge of frame')
+    try:
+        if ( (min(x) < 1.) or ( max(x) > npsf-2.) or \
+                 (min(y) < 1.) or ( max(y) > npsf-2.) ):
+            print('X,Y positions too close to edge of frame')
+        
+            if deriv:
+                return(xx*0,xx*0,xx*0)
+            else:
+                return(xx*0)
+    except:
+        print('No coordinates provided')
+        if deriv:
+            return(xx*0,xx*0,xx*0)
+        else:
+            return(xx*0)
 
-         if deriv:
-             return(xx*0,xx*0,xx*0)
-         else:
-             return(xx*0)
 
     # Evaluate the approximating Gaussian.
     # Then add a value interpolated from the look-up table to the approximating
