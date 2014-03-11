@@ -83,85 +83,85 @@ class pkfit_class:
         self.ronois = ronois
         self.phpadu = phpadu
 
-        def pkfit_norecent_noise(f,scale,x,y,sky,radius,
-                                 maxiter=25,
-                                 debug=False,
-                                 debug2=False):
-            f = self.f; gauss = self.gauss; psf = self.psf
-            fnoise = self.fnoise; fmask = self.fmask
+    def pkfit_norecent_noise(self,f,scale,x,y,sky,radius,
+                             maxiter=25,
+                             debug=False,
+                             debug2=False):
+        f = self.f; gauss = self.gauss; psf = self.psf
+        fnoise = self.fnoise; fmask = self.fmask
 
-            if debug2:
-                import time
-                tstart = time.time()
+        if debug2:
+            import time
+            tstart = time.time()
 
-            if f.dtype != 'float64': f = f.astype('float64')
-            psf1d = psf.reshape(shape(psf)[0]**2.)
+        if f.dtype != 'float64': f = f.astype('float64')
+        psf1d = psf.reshape(shape(psf)[0]**2.)
 
-            s = shape(f) #Get array dimensions
-            nx = s[1] ; ny = s[0] #Initialize a few things for the solution
+        s = shape(f) #Get array dimensions
+        nx = s[1] ; ny = s[0] #Initialize a few things for the solution
 
-            redo = 0
-            pkerr = 0.027/(gauss[3]*gauss[4])**2.
-            clamp = zeros(3) + 1.
-            dtold = zeros(3)
-            niter = 0
-            chiold = 1.
+        redo = 0
+        pkerr = 0.027/(gauss[3]*gauss[4])**2.
+        clamp = zeros(3) + 1.
+        dtold = zeros(3)
+        niter = 0
+        chiold = 1.
 
-            if debug:
-                print('PKFIT: ITER  X      Y      SCALE    ERRMAG   CHI     SHARP')
+        if debug:
+            print('PKFIT: ITER  X      Y      SCALE    ERRMAG   CHI     SHARP')
+            
+        if isnan(x) or isnan(y):
+            scale=1000000.0;
+            errmag=100000
+            chi=100000
+            sharp=100000
+            return(errmag,chi,sharp,niter,scale)
 
-            if isnan(x) or isnan(y):
-                scale=1000000.0;
-                errmag=100000
-                chi=100000
-                sharp=100000
-                return(errmag,chi,sharp,niter,scale)
-
-            loop=True
-            while loop:                        #Begin the big least-squares loop
-                niter = niter+1
-        
-                ixlo = int(x-radius)
-                if ixlo < 0: ixlo = 0       #Choose boundaries of subarray containing
-                iylo = int(y-radius)
-                if iylo < 0: iylo = 0       # 3points inside the fitting radius
-                ixhi = int(x+radius) +1 
-                if ixhi > (nx-1): ixhi = nx-1
-                iyhi = int(y+radius) +1
-                if iyhi > ny-1: iyhi = ny-1
-                ixx  = ixhi-ixlo+1
-                iyy  = iyhi-iylo+1
-                dy   = arange(iyy) + iylo - y    #X distance vector from stellar centroid
-                dysq = dy**2
-                dx   = arange(ixx) + ixlo - x
-                dxsq = dx**2
-                rsq  = zeros([iyy,ixx])  #RSQ - array of squared
-
-                radsq = radius**2
-                for j in range(iyy): rsq[j,:] = (dxsq+dysq[j])/radsq
-
-                # The fitting equation is of the form
-                #
-                # Observed brightness =
-                #      SCALE + delta(SCALE)  *  PSF + delta(Xcen)*d(PSF)/d(Xcen) +
-                #                                           delta(Ycen)*d(PSF)/d(Ycen)
-                #
-                # and is solved for the unknowns delta(SCALE) ( = the correction to
-                # the brightness ratio between the program star and the PSF) and
-                # delta(Xcen) and delta(Ycen) ( = corrections to the program star's
-                # centroid).
-                #
-                # The point-spread function is equal to the sum of the integral under
-                # a two-dimensional Gaussian profile plus a value interpolated from
-                # a look-up table.
-
-                # D. Jones - noise edit from Scolnic
-                #        good = where(rsq.reshape(shape(rsq)[0]*shape(rsq)[1]) < 1)[0]
-                #        rsqshape = shape(rsq)
-                #        fnoise_sub = fnoise[iylo:iyhi+1,ixlo:ixhi+1]#.reshape(rsqshape[0]*rsqshape[1])
-                #        fmask_sub = fmask[iylo:iyhi+1,ixlo:ixhi+1]#.reshape(rsqshape[0]*rsqshape[1])
-                #        good = where((rsq.reshape(rsqshape[0]*rsqshape[1]) < 1.) & 
-                #                        (fnoise_sub > 0) &
+        loop=True
+        while loop:                        #Begin the big least-squares loop
+            niter = niter+1
+            
+            ixlo = int(x-radius)
+            if ixlo < 0: ixlo = 0       #Choose boundaries of subarray containing
+            iylo = int(y-radius)
+            if iylo < 0: iylo = 0       # 3points inside the fitting radius
+            ixhi = int(x+radius) +1 
+            if ixhi > (nx-1): ixhi = nx-1
+            iyhi = int(y+radius) +1
+            if iyhi > ny-1: iyhi = ny-1
+            ixx  = ixhi-ixlo+1
+            iyy  = iyhi-iylo+1
+            dy   = arange(iyy) + iylo - y    #X distance vector from stellar centroid
+            dysq = dy**2
+            dx   = arange(ixx) + ixlo - x
+            dxsq = dx**2
+            rsq  = zeros([iyy,ixx])  #RSQ - array of squared
+            
+            radsq = radius**2
+            for j in range(iyy): rsq[j,:] = (dxsq+dysq[j])/radsq
+            
+            # The fitting equation is of the form
+            #
+            # Observed brightness =
+            #      SCALE + delta(SCALE)  *  PSF + delta(Xcen)*d(PSF)/d(Xcen) +
+            #                                           delta(Ycen)*d(PSF)/d(Ycen)
+            #
+            # and is solved for the unknowns delta(SCALE) ( = the correction to
+            # the brightness ratio between the program star and the PSF) and
+            # delta(Xcen) and delta(Ycen) ( = corrections to the program star's
+            # centroid).
+            #
+            # The point-spread function is equal to the sum of the integral under
+            # a two-dimensional Gaussian profile plus a value interpolated from
+            # a look-up table.
+            
+            # D. Jones - noise edit from Scolnic
+            #        good = where(rsq.reshape(shape(rsq)[0]*shape(rsq)[1]) < 1)[0]
+            #        rsqshape = shape(rsq)
+            #        fnoise_sub = fnoise[iylo:iyhi+1,ixlo:ixhi+1]#.reshape(rsqshape[0]*rsqshape[1])
+            #        fmask_sub = fmask[iylo:iyhi+1,ixlo:ixhi+1]#.reshape(rsqshape[0]*rsqshape[1])
+            #        good = where((rsq.reshape(rsqshape[0]*rsqshape[1]) < 1.) & 
+            #                        (fnoise_sub > 0) &
                 #                        (fmask_sub == 0))[0]
             good = where((rsq < 1.) & 
                          (fnoise[iylo:iyhi+1,ixlo:ixhi+1] > 0) &

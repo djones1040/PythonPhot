@@ -79,7 +79,7 @@ class pkfit_class:
         self.ronois = ronois
         self.phpadu = phpadu
         
-    def pkfit(scale,x,y,sky,radius,
+    def pkfit(self,scale,x,y,sky,radius,
               debug=False,
               debug2=False,xyout=False,
               maxiter=25):

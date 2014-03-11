@@ -81,7 +81,7 @@ class pkfit_class:
         self.ronois = ronois
         self.phpadu = phpadu
 
-    def pkfit_norecent(scale,x,y,sky,radius,
+    def pkfit_norecent(self,scale,x,y,sky,radius,
                        debug=False,maxiter=25):
         f = self.f; gauss = self.gauss; psf = self.psf
 
