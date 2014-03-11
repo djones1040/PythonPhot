@@ -311,11 +311,11 @@ def getpsf(image,xc,yc,
         f = image[ly:uy+1,lx:ux+1]
         x = xc[istar]-lx   ;   y = yc[istar]-ly   
 
-        errmag,chi,sharp,niter,scale,x,y = pkfit.pkfit(f, scale, x, y, 
-                                                       sky[istar], fitrad, 
-                                                       ronois, phpadu,
-                                                       gauss, psf, debug = debug,
-                                                       xyout = True)
+        pk = pkfit.pkfit_class(f,gauss,psf,ronois,phpado)
+        errmag,chi,sharp,niter,scale,x,y = pk.pkfit(scale, x, y, 
+                                                    sky[istar], fitrad,
+                                                    debug = debug,
+                                                    xyout = True)
 
         if niter == 25 or scale == 1000000.0 :	#Convergence in less than 25 iterations?
             print('GETPSF: No convergence after 25 iterations or invalid scale for star',istar)
