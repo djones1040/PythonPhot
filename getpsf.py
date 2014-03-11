@@ -311,7 +311,7 @@ def getpsf(image,xc,yc,
         f = image[ly:uy+1,lx:ux+1]
         x = xc[istar]-lx   ;   y = yc[istar]-ly   
 
-        pk = pkfit.pkfit_class(f,gauss,psf,ronois,phpado)
+        pk = pkfit.pkfit_class(f,gauss,psf,ronois,phpadu)
         errmag,chi,sharp,niter,scale,x,y = pk.pkfit(scale, x, y, 
                                                     sky[istar], fitrad,
                                                     debug = debug,
