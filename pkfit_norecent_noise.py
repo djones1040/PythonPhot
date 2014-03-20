@@ -83,7 +83,7 @@ class pkfit_class:
         self.ronois = ronois
         self.phpadu = phpadu
 
-    def pkfit_norecent_noise(self,f,scale,x,y,sky,radius,
+    def pkfit_norecent_noise(self,scale,x,y,sky,radius,
                              maxiter=25,
                              debug=False,
                              debug2=False):
