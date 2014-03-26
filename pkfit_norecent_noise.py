@@ -330,8 +330,8 @@ class pkfit_class:
             
             #        sig  = fpos/phpadu + ronois + (0.0075*fpos)**2 + (pkerr*(fpos-sky))**2
             # D. Jones - noise addition from Scolnic
-            sig = fsubnoise**2
-            numer = sum(dfdsig*df/sig)
+            sig = fsubnoise[lilrho[0]]**2
+            numer = sum(dfdsig*df[lilrho[0]]/sig)
             denom = sum(dfdsig**2/sig)
 
             # Derive the weight of this pixel.  First of all, the weight depends
