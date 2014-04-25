@@ -108,12 +108,14 @@ def getpsf(image,xc,yc,
     s = np.shape(image)    		#Get number of rows and columns in image
     ncol = s[1] ; nrow = s[0]
     nstar = len(xc)	        #Total # of stars identified in image
+    psfmag =  1000000.0 # initial values for psfmag and gauss in case all fails
+    gauss = np.array([1,-1,-1,-1,-1])
 
     # GOT_ID:  
 
     if fitrad >= psfrad:
         print('ERROR - Fitting radius must be smaller than radius defining PSF')
-        return(gauss,-1)
+        return(gauss,-1,-1)
 
     numpsf = len(idpsf)      ## of stars used to create the PSF
 
@@ -143,8 +145,8 @@ def getpsf(image,xc,yc,
         nstrps = nstrps + 1       
         if nstrps >= numpsf:
             print('ERROR - No valid PSF stars were supplied')
-            gauss=-1
-            return(gauss,-1)
+            gauss=np.array([-1,-1,-1,-1,-1])
+            return(gauss,-1,-1)
 
         istar = idpsf[nstrps]       #ID number of first PSF star
         ixcen = int(xc[istar])      
@@ -197,8 +199,10 @@ def getpsf(image,xc,yc,
             niter = niter + 1
             if niter > 100:   #No convergence after 100 iterations?
                 print('No convergence after 100 iterations for star ' + str(istar))
-                gauss=-1
+                gauss=np.array([-1,-1,-1,-1,-1])
                 niterflag=True
+                if nstrps >= numpsf-1:
+                    return(gauss,-1,-1)
                 break
 
             if sigx <= 1: nx = 1    #A default box width 
