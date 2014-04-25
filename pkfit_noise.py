@@ -167,7 +167,7 @@ class pkfit_class:
             
             t = zeros([3,ngood])
 
-            if not len(good):
+            if not len(good[0]):
                 scale=1000000.0;
                 errmag=100000
                 chi=100000
