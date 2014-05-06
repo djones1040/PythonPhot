@@ -104,6 +104,7 @@ def find(image,
     # Determine if hardcopy output is desired
     doprint = doprint
 
+    image = image.astype(np.float64)
     maxbox = 13 	#Maximum size of convolution box in pixels 
 
     # Get information about the input image 
