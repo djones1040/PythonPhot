@@ -171,7 +171,7 @@ def nstar(image,id,xc,yc,
         niter = 0
         clip = False
         nterm = nstr*3 + varsky
-        xold = np.zeros(nterm)
+        xold = np.array([[0]*nterm])
         clamp = array([1.]*nterm)
         xb = xc[index].astype(float)  ;   yb = yc[index].astype(float)
         magg = mag[index].astype(float) ; skyg = sky[index].astype(float)
@@ -282,7 +282,7 @@ def nstar(image,id,xc,yc,
                 temp = (rpixsq <= 0.999998*radsq)
                 for ymask in range(y1,y2+1):
                     for xmask in range(x1,x2+1):
-                        mask[ymask,xmask] = mask[ymask,xmask] or temp[ymask,xmask]
+                        mask[ymask,xmask] = mask[ymask,xmask] or temp[ymask-y1,xmask-x1]
                 good = where(temp)
                 rsq = rpixsq[good]/radsq
                 temp1 = wt[y1:y2+1,x1:x2+1] 
@@ -292,7 +292,7 @@ def nstar(image,id,xc,yc,
                     temp1[good[0][temp1rows],good[1][temp1rows]] = temp1[good[temp1rows]]
                 if len(rsqrows):
                     temp1[good[0][rsqrows],good[1][rsqrows]] = (5./(5.+rsq[rsqrows]/(1.-rsq[rsqrows])) )
-                wt[:,:] = temp1
+                wt[y1:y2+1,x1:x2+1] = temp1
 
             igood = where(mask)
             ngoodpix = len(igood[0])
@@ -313,16 +313,16 @@ def nstar(image,id,xc,yc,
                 temp = np.zeros(np.shape(mask[y1:y2+1,x1:x2+1]))
                 for ymask in range(y1,y2+1):
                     for xmask in range(x1,x2+1):
-                        temp[ymask,xmask] = mask[ymask,xmask] and (rpxsq[ymask,xmask] < psfrsq)
+                        temp[ymask-y1,xmask-x1] = mask[ymask,xmask] and (rpxsq[ymask-y1,xmask-x1] < psfrsq)
                 temp1 = np.zeros([ny,nx],dtype='b')
-                temp1[:,:] = temp #is this correct? 
+                temp1[y1:y2+1,x1:x2+1] = temp #is this correct? 
                 goodfit = where(temp1[igood])[0]
                 psfmask[j,goodfit] = 1
                 good = where(temp)
                 xgood = xgen[good[1]] ; ygood = ygen[good[0]]
                 model,dvdx,dvdy = dao_value.dao_value(xgood,ygood,gauss,psf,psf1d=psf.reshape(np.shape(psf)[0]**2.),ps1d=True)
                 d[goodfit] = d[goodfit] - magg[j]*model
-                x[3*j*ngoodpix,goodfit] = -model
+                x[3*j,goodfit] = -model
                 x[3*j+1,goodfit] = magg[j]*dvdx
                 x[3*j+2,goodfit] = magg[j]*dvdy
 
@@ -409,20 +409,20 @@ def nstar(image,id,xc,yc,
                 if redo == 0: redo = np.max( abs(np.append(x[:,k], x[:,l])) > 0.01)
 
             
-            sgn = where( xold[:,j]*x[j]/magg**2 < -1e-37 )[0]  
+            sgn = where( xold[0][j]*x[0][j]/magg**2 < -1e-37 )[0]  
             if len(sgn) > 0: clamp[j[sgn]] = 0.5*clamp[j[sgn]]
-            sgn = where( xold[:,k]*x[:,k]        < -1e-37 )[0]
+            sgn = where( xold[0][k]*x[0][k]        < -1e-37 )[0]
             if len(sgn) > 0: clamp[k[sgn]] = 0.5*clamp[k[sgn]]
-            sgn = where( xold[:,l]*x[:,l]        < -1e-37 )[0]
+            sgn = where( xold[0][l]*x[0][l]        < -1e-37 )[0]
             if len(sgn) == 0: clamp[l[sgn]] = 0.5*clamp[l[sgn]]
 
-            denom1 = (x[:,j]/(0.84*magg))
-            denomrow = where(denom1 < (-x[:,j]/(5.25*magg)))[0]
-            if len(denomrow): denom1[denomrow] = (-x[:,j]/(5.25*magg))
-            magg = magg-x[:,j] / (1.+ denom1 / clamp[:,j] )
+            denom1 = (x[0][j]/(0.84*magg))
+            denomrow = where(denom1 < (-x[0][j]/(5.25*magg)))[0]
+            if len(denomrow): denom1[denomrow] = (-x[0][j]/(5.25*magg))
+            magg = magg-x[0][j] / (1.+ denom1 / clamp[j] )
 
-            xg = xg - x[:,k]   /(1.+abs(x[:,k])/( clamp[:,k]*0.5))
-            yg = yg - x[:,l]   /(1.+abs(x[:,l])/( clamp[:,l]*0.5))
+            xg = xg - x[0][k]   /(1.+abs(x[0][k])/( clamp[k]*0.5))
+            yg = yg - x[0][l]   /(1.+abs(x[0][l])/( clamp[l]*0.5))
             xold = x
 
             magerr = c[j,j]*(nstr*chi**2 + (nstr-1)*chiold**2)/(2.*nstr-1.)
@@ -496,10 +496,9 @@ def nstar(image,id,xc,yc,
             if debug:
                 err = 1.085736*sqrt(magerr)/magg
                 for i in range(nstr):
-                    print idg[i],xg[i]+ixmin,yg[i]+iymin,\
-                        psfmag-1.085736*alog(magg[i]),err[i],\
-                        skyg[i],niter,chi[i],sharp[i]
-
+                        print idg[i],xg[i]+ixmin,yg[i]+iymin,\
+                            psfmag-1.085736*alog(magg[i]),err[i],\
+                            skyg[i],niter,chi[i],sharp[i]
 
             if redo and (niter <= 50) and (faint < wcrit): continue # goto,START_IT   
             # REM_FAINT: 
@@ -513,16 +512,20 @@ def nstar(image,id,xc,yc,
 
             err = 1.085736*sqrt(magerr)/magg
             magg = psfmag - 1.085736*np.log(magg)
-            if sharp > 99.999: sharp = 99.999
-            elif sharp < -99.999: sharp = -99.999
+            sharprow = where(sharp > 99.99)[0]
+            if len(sharprow): sharp[sharprow] = 99.99
+            sharprow = where(sharp < -99.99)[0]
+            if len(sharprow): sharp[sharprow] = -99.99
+            # if sharp > 99.999: sharp = 99.999
+            # elif sharp < -99.999: sharp = -99.999
             xg = xg+ixmin ; yg = yg+iymin
 
             # Print results to terminal and/or file
 
             if not silent: 
-                for i in range(nstr): print idg[i],xg[i][0],yg[i][0],\
-                        magg[i][0],err[i][0],skyg[i],niter,chi[i],sharp[i][0]
-
+                for i in range(nstr): 
+                    print idg[i],xg[i],yg[i],\
+                        magg[i],err[i],skyg[i],niter,chi[i],sharp[i]
             if doPrint: 
                 for i in range(nstr): 
                     print >> fout, idg[i],xg[i],yg[i],\
@@ -535,7 +538,7 @@ def nstar(image,id,xc,yc,
                 errmag = err
             else:          #Append current group to output vector
                 newid = np.append(newid,idg) ; newx = np.append(newx ,xg) ; newy = np.append(newy,yg)
-                newmag = np.append(newmag,magg) ; iter = np.append(iter,replicate(niter,nstr))
+                newmag = np.append(newmag,magg) ; iter = np.append(iter,np.array([niter]*nstr))
                 peak = np.append(peak,sharp)     ; chisq = np.append(chisq,chi) ; errmag = np.append(errmag,err)
             
             doLoop=False
@@ -577,7 +580,7 @@ def rem_faint(faint,nfaint,nstr,idg,xg,yg,magg,skyg,magerr,nterm,xold,clamp,clip
             skyg = item_remove(ifaint,skyg)
             magerr = item_remove(ifaint,magerr)
             nterm = nstr*3 + varsky
-            xold = dblarr(nterm)
+            xold = np.array([[0]*nterm])
             clamp = array([1.]*nterm)
             clip = 0
             niter = niter-1
