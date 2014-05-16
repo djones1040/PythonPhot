@@ -269,7 +269,7 @@ def nstar(image,id,xc,yc,
             wt = np.zeros([ny,nx])
             mask = np.zeros([ny,nx],dtype='b')
             nterm = 3*nstr + varsky
-            chi = np.zeros(nstr) ; sumwt = chi ; numer = chi ; denom = chi
+            chi = np.zeros(nstr) ; sumwt = np.zeros(nstr) ; numer = np.zeros(nstr) ; denom = np.zeros(nstr)
             c = np.zeros([nterm,nterm]) ; v = np.zeros(nterm)
 
             for j in range(nstr):   #Mask of pixels within fitting radius of any star
@@ -400,12 +400,13 @@ def nstar(image,id,xc,yc,
             clip = True
             j = 3*np.arange(nstr) ; k = j+1 ; l=j+2
             sharp = sharpnrm*numer/(magg*denom)
+
             if not redo:
-                redovar = (0.05*chi*sqrt(c[j+nterm*j]))
+                redovar = (0.05*chi*sqrt(c[j,j]))
                 redorow = where(redovar < 0.001*magg)[0]
                 if len(redorow): redovar[redorow] = 0.001*magg
-                redo = np.max(np.abs(x[j]) > redovar)
-                if redo == 0: redo = np.max( abs([x[k], x[l]]) > 0.01)
+                redo = np.max(np.abs(x[:,j]) > redovar)
+                if redo == 0: redo = np.max( abs(np.append(x[:,k], x[:,l])) > 0.01)
 
             
             sgn = where( xold[:,j]*x[j]/magg**2 < -1e-37 )[0]  
@@ -461,7 +462,8 @@ def nstar(image,id,xc,yc,
                 nterm = nstr*3 + varsky
                 redo = True
 
-            faint = 1        
+
+            faint = 1
             toofaint =  where (magg <= 1.e-5)[0]
             nfaint = len(toofaint)
                               #Number of stars 12.5 mags fainter than PSF star
@@ -475,7 +477,8 @@ def nstar(image,id,xc,yc,
                     xold,clamp,clip,niter,\
                     done_group,restart = rem_faint(faint,nfaint,nstr,idg,
                                                    xg,yg,magg,skyg,magerr,
-                                                   nterm,xold,clamp,clip,niter)
+                                                   nterm,xold,clamp,clip,niter,
+                                                   silent=silent)
 
                  # goto, REM_FAINT                #Remove faintest star
             else:
@@ -483,6 +486,7 @@ def nstar(image,id,xc,yc,
                 ifaint = -1
                 if (not redo) or (niter >= 4):
                     faint = np.max(magerr/magg**2)
+                    if niter > 40: import pdb; pdb.set_trace()
                     ifaint = where(faint == magerr/magg**2.)[0]
                 else:
                     continue
@@ -504,7 +508,7 @@ def nstar(image,id,xc,yc,
                 xold,clamp,clip,niter,\
                 done_group,restart = rem_faint(faint,nfaint,nstr,idg,
                                                xg,yg,magg,skyg,magerr,
-                                               nterm,xold,clamp,clip,niter)
+                                               nterm,xold,clamp,clip,niter,ifaint)
             if done_group: break
 
             err = 1.085736*sqrt(magerr)/magg
@@ -516,8 +520,9 @@ def nstar(image,id,xc,yc,
             # Print results to terminal and/or file
 
             if not silent: 
-                for i in range(nstr): print idg[i],xg[i],yg[i],\
-                        magg[i],err[i],skyg[i],niter,chi[i],sharp[i]
+                for i in range(nstr): print idg[i],xg[i][0],yg[i][0],\
+                        magg[i][0],err[i][0],skyg[i],niter,chi[i],sharp[i][0]
+
             if doPrint: 
                 for i in range(nstr): 
                     print >> fout, idg[i],xg[i],yg[i],\
@@ -536,11 +541,11 @@ def nstar(image,id,xc,yc,
             doLoop=False
 #DONE_GROUP: 
 
-    if len(newid) > 0:
+    if 'newid' in locals():
         id = newid ;  xc = newx ;  yc = newy  ; mags = newmag
     else:
         print 'ERROR - There are no valid stars left, variables not updated'
-
+        return(-1,-1,-1,-1)
 
     if doPrint: fout.close()
 
@@ -554,7 +559,7 @@ def item_remove(index,array):
 
     return(smaller_array)
 
-def rem_faint(faint,nfaint,nstr,idg,xg,yg,magg,skyg,magerr,nterm,xold,clamp,clip,niter):
+def rem_faint(faint,nfaint,nstr,idg,xg,yg,magg,skyg,magerr,nterm,xold,clamp,clip,niter,ifaint,silent=False):
     done_group = False
     restart = False
 
