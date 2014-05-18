@@ -292,8 +292,8 @@ def find(image,
 
         #   Compute Roundness statistic
 
-        dx = np.sum( np.sum(temp,axis=1)*c1)   
-        dy = np.sum( np.sum(temp,axis=0)*c1)
+        dx = np.sum( np.sum(temp,axis=0)*c1)   
+        dy = np.sum( np.sum(temp,axis=1)*c1)
         if (dx <= 0) or (dy <= 0):
             badround = badround + 1
             continue     #Cannot compute roundness

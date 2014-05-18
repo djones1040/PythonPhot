@@ -338,8 +338,26 @@ def getpsf(image,xc,yc,
         yy = psfgen + y 
         xx,yy = make_2d(xx,yy)
         psftemp = rinter(f,xx,yy,deriv=False,ps1d=False)
+
+        # deal with bad pixels
         nanrow = np.where(psftemp != psftemp)
-        psftemp[nanrow[0],nanrow[1]] = 0
+        goodrow = np.where(psftemp == psftemp)
+        psfshape = np.shape(psf)
+        for n0,n1 in zip(nanrow[0],nanrow[1]):
+            ind1 = n0 - 2; ind2 = no + 3
+            ind3 = n1 - 2; ind4 = n1 + 3
+            if ind1 < 0: ind1 = 0
+            if ind2 > psfshape[0]: ind2 = psfshape[0]
+            if ind3 < 0: ind3 = 0
+            if ind4 > psfshape[1]: ind4 = psfshape[1]
+
+            psftempsub = psftemp[ind1:ind2,ind3:ind4]
+            try:
+                psftemp[n0,n1] = np.median(psftempsub[np.where(psftempsub == psftempsub)])
+            except:
+                psftemp[n0,n1] = np.median(psftemp[np.where(psftemp == psftemp)])
+#        psftemp[nanrow[0],nanrow[1]] = 0
+
         psf = psf + psftemp
 
         # Now correct both the height of the analytic Gaussian, and the value

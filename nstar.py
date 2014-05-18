@@ -3,6 +3,8 @@
 
 """
 This procedure was adapted for Python from the IDL Astronomy Users Library.
+Python routine also returns SHARP vector and includes 'faintlim' input
+to determine faintness of stars that should be excluded
 Original documentation:
 ;+
 ; NAME:
@@ -83,17 +85,24 @@ Original documentation:
 ;-"""
 
 import numpy as np
-from numpy import where,array,sqrt
+from numpy import where,array,sqrt,shape
 import os
 from scipy import linalg
 import dao_value
 import pyfits
+import exceptions
 
 def nstar(image,id,xc,yc,
           mags,sky,group,phpadu,
           readns,psfname,debug=False,
           doPrint=False,silent=False,
-          varsky=False):
+          varsky=False,faintlim=0.25):
+    
+    shapeid,shapexc,shapeyc,shapemags,shapesky,shapegroup = \
+        shape(id),shape(xc),shape(yc),shape(mags),shape(sky),shape(group)
+    for shapevar in [shapexc,shapeyc,shapemags,shapesky,shapegroup]:
+        if shapevar != shapeid:
+            raise exceptions.RuntimeError('Input variables have different shapes!')
 
     psf_file = psfname
     image = image.astype(np.float64)
@@ -102,7 +111,7 @@ def nstar(image,id,xc,yc,
 
     # Read in the FITS file containing the PSF
 
-    s = np.shape(image)
+    s = shape(image)
     icol = s[1]-1 ; irow = s[0]-1  #Index of last row and column
     psf = pyfits.getdata(psfname)
     hpsf = pyfits.getheader(psfname)
@@ -164,7 +173,7 @@ def nstar(image,id,xc,yc,
 
         if nstr == 0:
             print 'No stars found'
-            return(-1,-1,-1,-1)
+            return(-1,-1,-1,-1,-1)
 
         magerr = np.zeros(nstr)
         chiold = 1.0
@@ -289,7 +298,7 @@ def nstar(image,id,xc,yc,
                 temp1rows = where(np.greater(temp1[good],(5./(5.+rsq/(1.-rsq)) )))[0]
                 rsqrows = where(np.less_equal(temp1[good],(5./(5.+rsq/(1.-rsq)) )))[0]
                 if len(temp1rows):
-                    temp1[good[0][temp1rows],good[1][temp1rows]] = temp1[good[temp1rows]]
+                    temp1[good[0][temp1rows],good[1][temp1rows]] = temp1[good[0][temp1rows],good[1][temp1rows]]
                 if len(rsqrows):
                     temp1[good[0][rsqrows],good[1][rsqrows]] = (5./(5.+rsq[rsqrows]/(1.-rsq[rsqrows])) )
                 wt[y1:y2+1,x1:x2+1] = temp1
@@ -310,17 +319,19 @@ def nstar(image,id,xc,yc,
                 xgen2 = xgen**2. ; ygen2 = ygen**2.
                 rpxsq = np.zeros( [npsfy[j],npsfx[j]] )
                 for k in range(npsfy[j]): rpxsq[k,:] = xgen2 + ygen2[k]
-                temp = np.zeros(np.shape(mask[y1:y2+1,x1:x2+1]))
+                temp = np.zeros(shape(mask[y1:y2+1,x1:x2+1]))
                 for ymask in range(y1,y2+1):
                     for xmask in range(x1,x2+1):
                         temp[ymask-y1,xmask-x1] = mask[ymask,xmask] and (rpxsq[ymask-y1,xmask-x1] < psfrsq)
+#                if not len(where(mask[y1:y2+1,x1:x2+1])): import pdb; pdb.set_trace()
                 temp1 = np.zeros([ny,nx],dtype='b')
                 temp1[y1:y2+1,x1:x2+1] = temp #is this correct? 
                 goodfit = where(temp1[igood])[0]
                 psfmask[j,goodfit] = 1
                 good = where(temp)
                 xgood = xgen[good[1]] ; ygood = ygen[good[0]]
-                model,dvdx,dvdy = dao_value.dao_value(xgood,ygood,gauss,psf,psf1d=psf.reshape(np.shape(psf)[0]**2.),ps1d=True)
+#                if not len(xgood): import pdb; pdb.set_trace()
+                model,dvdx,dvdy = dao_value.dao_value(xgood,ygood,gauss,psf,psf1d=psf.reshape(shape(psf)[0]**2.),ps1d=True)
                 d[goodfit] = d[goodfit] - magg[j]*model
                 x[3*j,goodfit] = -model
                 x[3*j+1,goodfit] = magg[j]*dvdx
@@ -339,10 +350,11 @@ def nstar(image,id,xc,yc,
                 bigpix = where(relerr > 20.*chiold)[0]
                 nbigpix = len(bigpix)
                 if ( nbigpix > 0 ):
-                    keep = range(ngoodpix)
-                    for i in range(nbigpix): keep = keep[ where( keep != bigpix[i]) ]
-                    wt= wt[keep] ; d = d[keep] ; idimage = idimage[keep] 
-                    igood= igood[keep]  ; relerr = relerr[keep]
+                    keep = np.arange(ngoodpix)
+                    for i in range(nbigpix): keep = keep[ where( keep != bigpix[i])[0] ]
+                    wt= wt[keep] ; d = d[keep] ; idimage = idimage[keep] ; sigsq = sigsq[keep]
+                    ngoodpix = len(keep)
+                    igood= (igood[0][keep],igood[1][keep])  ; relerr = relerr[keep]
                     psfmask = psfmask[:,keep]   ;  x = x[:,keep]
 
 
@@ -478,7 +490,7 @@ def nstar(image,id,xc,yc,
                     done_group,restart = rem_faint(faint,nfaint,nstr,idg,
                                                    xg,yg,magg,skyg,magerr,
                                                    nterm,xold,clamp,clip,niter,
-                                                   silent=silent)
+                                                   silent=silent,faintlim=faintlim)
 
                  # goto, REM_FAINT                #Remove faintest star
             else:
@@ -486,7 +498,6 @@ def nstar(image,id,xc,yc,
                 ifaint = -1
                 if (not redo) or (niter >= 4):
                     faint = np.max(magerr/magg**2)
-                    if niter > 40: import pdb; pdb.set_trace()
                     ifaint = where(faint == magerr/magg**2.)[0]
                 else:
                     continue
@@ -507,7 +518,9 @@ def nstar(image,id,xc,yc,
                 xold,clamp,clip,niter,\
                 done_group,restart = rem_faint(faint,nfaint,nstr,idg,
                                                xg,yg,magg,skyg,magerr,
-                                               nterm,xold,clamp,clip,niter,ifaint)
+                                               nterm,xold,clamp,clip,
+                                               niter,ifaint,silent=silent,
+                                               faintlim=faintlim)
             if done_group: break
 
             err = 1.085736*sqrt(magerr)/magg
@@ -548,25 +561,29 @@ def nstar(image,id,xc,yc,
         id = newid ;  xc = newx ;  yc = newy  ; mags = newmag
     else:
         print 'ERROR - There are no valid stars left, variables not updated'
-        return(-1,-1,-1,-1)
+        return(-1,-1,-1,-1,-1)
 
     if doPrint: fout.close()
 
-    return(errmag,iter,chisq,peak)
+    return(errmag,iter,chisq,sharp,peak)
 
 def item_remove(index,array):
 
-    mask = ones(array.shape,dtype=bool)
+    mask = np.ones(array.shape,dtype=bool)
     mask[index] = False
     smaller_array = array[mask]
 
     return(smaller_array)
 
-def rem_faint(faint,nfaint,nstr,idg,xg,yg,magg,skyg,magerr,nterm,xold,clamp,clip,niter,ifaint,silent=False):
+def rem_faint(faint,nfaint,nstr,
+              idg,xg,yg,magg,
+              skyg,magerr,nterm,
+              xold,clamp,clip,
+              niter,ifaint,silent=False,faintlim=0.25):
     done_group = False
     restart = False
 
-    if (faint >= 0.25) or (nfaint > 0):
+    if (faint >= faintlim) or (nfaint > 0):
         if not silent:
             print 'Star %s is too faint'%idg[ifaint]
         nstr = nstr-1
