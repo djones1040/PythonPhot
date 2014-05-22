@@ -3,9 +3,10 @@
 """This procedure was adapted for Python from the IDL Astronomy Users Library."""
 
 import numpy as np
+from numpy import where,append,array
 import exceptions
 
-def group( x, y, rcrit, ngroup):
+def group( x, y, rcrit):
     """IDL documentation:
     ;+
     ; NAME:
@@ -69,25 +70,27 @@ def group( x, y, rcrit, ngroup):
         dis2 = (x[i] - x[i+1:])**2. + (y[i] - y[i+1:])**2.
         good =  where( dis2 <= rcrit2)[0]
         ngood = len(good)
+
         if ngood > 0:             #Any stars within critical radius?
 
-            good = [i,good+i+1]
+            good = append(array(i),good+i+1)
+
             groupval = ngroup[good]
             mingroup = np.min( groupval )
             if ( mingroup < i ):      #Any groups merge?
                 groupval = groupval[ where( groupval < i) ]
                 nval = len(groupval)
                 if nval > 1:
-                    groupval = groupval[ rem_dup(groupval) ]
-                    nval = len(groupval)
+                    groupval = np.unique(groupval)
+                nval = len(groupval)
 
-                    if nval >= 2: 
-                        for j in range(nval):
-                            redo = where ( ngroup == groupval[j] )[0]
-                            ndo = len(redo)
-                            if ndo > 0: ngroup[redo] = mingroup
+                if nval >= 2: 
+                    for j in range(1,nval):
+                        redo = where ( ngroup == groupval[j] )[0]
+                        ndo = len(redo)
+                        if ndo > 0: ngroup[redo] = mingroup
 
-                ngroup[good] = mingroup
+            ngroup[good] = mingroup
 
 #
 # Star are now placed in distinct groups, but they are not ordered
@@ -95,7 +98,7 @@ def group( x, y, rcrit, ngroup):
 #
     if np.max(ngroup) == 0: return(np.zeros(len(x)))               #All stars in one group ?
 
-    ghist = np.histogram(ngroup,range=[0,max(ngroup)],bins=ngroup)[0]
+    ghist = np.histogram(ngroup,bins=max(ngroup)+1)[0]
     gmax = np.max(ghist)
     val = where(ghist >= 1)[0]
     ngood = len(val)
