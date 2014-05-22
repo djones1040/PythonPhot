@@ -97,6 +97,7 @@ def nstar(image,id,xc,yc,
           readns,psfname,debug=False,
           doPrint=False,silent=False,
           varsky=False,faintlim=0.25):
+    image = image.astype(np.float64)
     
     shapeid,shapexc,shapeyc,shapemags,shapesky,shapegroup = \
         shape(id),shape(xc),shape(yc),shape(mags),shape(sky),shape(group)
@@ -116,7 +117,8 @@ def nstar(image,id,xc,yc,
     psf = pyfits.getdata(psfname)
     hpsf = pyfits.getheader(psfname)
 
-    gauss = array([hpsf['GAUSS1'],hpsf['GAUSS2'],hpsf['GAUSS3'],hpsf['GAUSS4'],hpsf['GAUSS5']])
+    gauss = array([hpsf['GAUSS1'],hpsf['GAUSS2'],
+                   hpsf['GAUSS3'],hpsf['GAUSS4'],hpsf['GAUSS5']])
     psfmag = hpsf['PSFMAG']
     psfrad = hpsf['PSFRAD']
     fitrad = hpsf['FITRAD']
@@ -173,7 +175,7 @@ def nstar(image,id,xc,yc,
 
         if nstr == 0:
             print 'No stars found'
-            return(-1,-1,-1,-1,-1)
+            return(-1,-1,-1,-1,-1,-1)
 
         magerr = np.zeros(nstr)
         chiold = 1.0
@@ -194,6 +196,7 @@ def nstar(image,id,xc,yc,
             if not restart:
                 niter = niter+1
 
+            restart=False
             if niter >= 4 : wcrit = 1
             elif niter >= 8 : wcrit = 0.4444444
             elif niter >= 12: wcrit = 0.25             
@@ -232,7 +235,7 @@ def nstar(image,id,xc,yc,
                         k = bad[l] + j + 1
                         if magg[k] < magg[j]: imin = k 
                         else: imin = j #Identify fainter star
-
+                        
                         if ( sep[l] < 0.14*sepmin) or \
                                 ( magerr[imin]/magg[imin]**2. > wcrit ):
                             if  imin == j: imerge = k 
@@ -253,18 +256,19 @@ def nstar(image,id,xc,yc,
                             skyg = item_remove(imin,skyg)
                             magerr = item_remove(imin,magerr)    #Remove fainter star from group
                             nterm = nstr*3 + varsky                   #Update matrix size
-                            xold = np.zeros(nterm) 
+                            xold = [np.zeros(nterm)] 
                             clamp = array([1.]*nterm)               #Release all clamps
                             clip = False
                             niter = niter-1                           #Back up iteration counter
                             restart = True
-                            continue
+                            break
                             #      goto, RESTART 
-
-
+                    if restart: break
+                if restart: break
+            
 
                 j = j+1
-
+            if restart: continue
 
             xpsfmin = (xg - psfrad+1).astype(int)
             xpsfmin[where(xpsfmin < 0)] = 0
@@ -323,14 +327,12 @@ def nstar(image,id,xc,yc,
                 for ymask in range(y1,y2+1):
                     for xmask in range(x1,x2+1):
                         temp[ymask-y1,xmask-x1] = mask[ymask,xmask] and (rpxsq[ymask-y1,xmask-x1] < psfrsq)
-#                if not len(where(mask[y1:y2+1,x1:x2+1])): import pdb; pdb.set_trace()
                 temp1 = np.zeros([ny,nx],dtype='b')
                 temp1[y1:y2+1,x1:x2+1] = temp #is this correct? 
                 goodfit = where(temp1[igood])[0]
                 psfmask[j,goodfit] = 1
                 good = where(temp)
                 xgood = xgen[good[1]] ; ygood = ygen[good[0]]
-#                if not len(xgood): import pdb; pdb.set_trace()
                 model,dvdx,dvdy = dao_value.dao_value(xgood,ygood,gauss,psf,psf1d=psf.reshape(shape(psf)[0]**2.),ps1d=True)
                 d[goodfit] = d[goodfit] - magg[j]*model
                 x[3*j,goodfit] = -model
@@ -396,7 +398,7 @@ def nstar(image,id,xc,yc,
                 chi[i] = 1.2533*chi[i]*sqrt(1./((sumwt[i]-3.)*sumwt[i]))
                 chi[i] = ((sumwt[i]-3.)*chi[i]+3.)/sumwt[i]
 
-            chibad = where(sumwt <= 3)
+            chibad = where(sumwt <= 3)[0]
             ngood = len(chibad)
             if ngood > 0: chi[chibad] = chiold
 
@@ -555,17 +557,18 @@ def nstar(image,id,xc,yc,
                 peak = np.append(peak,sharp)     ; chisq = np.append(chisq,chi) ; errmag = np.append(errmag,err)
             
             doLoop=False
+
 #DONE_GROUP: 
 
     if 'newid' in locals():
         id = newid ;  xc = newx ;  yc = newy  ; mags = newmag
     else:
         print 'ERROR - There are no valid stars left, variables not updated'
-        return(-1,-1,-1,-1,-1)
+        return(-1,-1,-1,-1,-1,-1)
 
     if doPrint: fout.close()
 
-    return(errmag,iter,chisq,sharp,peak)
+    return(mags,errmag,iter,chisq,sharp,peak)
 
 def item_remove(index,array):
 
