@@ -91,13 +91,19 @@ from scipy import linalg
 import dao_value
 import pyfits
 import exceptions
+import copy
 
 def nstar(image,id,xc,yc,
           mags,sky,group,phpadu,
           readns,psfname,debug=False,
           doPrint=False,silent=False,
-          varsky=False,faintlim=0.25):
+          varsky=False,faintlim=0.25,
+          ForcedPhot=False,noiseimage=[]):
     image = image.astype(np.float64)
+    if len(noiseimage):
+        noiseimage = noiseimage.astype(np.float64)
+        noise = True
+    else: noise = False
     
     shapeid,shapexc,shapeyc,shapemags,shapesky,shapegroup = \
         shape(id),shape(xc),shape(yc),shape(mags),shape(sky),shape(group)
@@ -106,7 +112,6 @@ def nstar(image,id,xc,yc,
             raise exceptions.RuntimeError('Input variables have different shapes!')
 
     psf_file = psfname
-    image = image.astype(np.float64)
     if not os.path.exists(psf_file):
         print('ERROR - Unable to locate PSF file %s'%psf_file)
 
@@ -220,6 +225,8 @@ def nstar(image,id,xc,yc,
             ixmax = np.max(xfitmax); iymax = np.max(yfitmax)
             nx = ixmax-ixmin+1 ; ny = iymax-iymin+1
             dimage = image[iymin:iymax+1,ixmin:ixmax+1]
+            if noise:
+                dnoise = noiseimage[iymin:iymax+1,ixmin:ixmax+1]
             xfitmin = xfitmin -ixmin ; yfitmin = yfitmin-iymin
             xfitmax = xfitmax -ixmin ; yfitmax = yfitmax-iymin
             #                                        Offset to the subarray
@@ -315,6 +322,8 @@ def nstar(image,id,xc,yc,
 
             psfmask = np.zeros([nstr,ngoodpix],dtype='b')
             d = dimage[igood] - skybar
+            if noise:
+                dn = dimage[igood]
             for j in range(nstr):  #Masks of pixels within PSF radius of each star
                 x1 = xpsfmin[j]   ;    y1 = ypsfmin[j]
                 x2 = xpsfmax[j]   ;    y2 = ypsfmax[j]
@@ -345,7 +354,10 @@ def nstar(image,id,xc,yc,
             dposrow = where(dpos < 0)
             dpos[dposrow] = 0
 
-            sigsq = dpos/phpadu + ronois + (0.0075*dpos)**2 + (pkerr*(dpos-skybar))**2
+            if not noise:
+                sigsq = dpos/phpadu + ronois + (0.0075*dpos)**2 + (pkerr*(dpos-skybar))**2
+            else:
+                sigsq = dn**2.
 
             relerr = np.abs(d)/sqrt(sigsq)
             if clip:   #Reject pixels with 20 sigma errors (after 1st iteration)
@@ -435,9 +447,10 @@ def nstar(image,id,xc,yc,
             if len(denomrow): denom1[denomrow] = (-x[0][j]/(5.25*magg))
             magg = magg-x[0][j] / (1.+ denom1 / clamp[j] )
 
-            xg = xg - x[0][k]   /(1.+abs(x[0][k])/( clamp[k]*0.5))
-            yg = yg - x[0][l]   /(1.+abs(x[0][l])/( clamp[l]*0.5))
-            xold = x
+            if not ForcedPhot:
+                xg = xg - x[0][k]   /(1.+abs(x[0][k])/( clamp[k]*0.5))
+                yg = yg - x[0][l]   /(1.+abs(x[0][l])/( clamp[l]*0.5))
+            xold = copy.deepcopy(x)
 
             magerr = c[j,j]*(nstr*chi**2 + (nstr-1)*chiold**2)/(2.*nstr-1.)
 
