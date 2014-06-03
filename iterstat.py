@@ -3,10 +3,13 @@
 
 import numpy as np
 
-def iterstat(d):
+def iterstat(d,startMedian=False):
     clip=3.0 #sigma                                                                                                         
     img=d.astype('float64')
-    md=np.mean(img)
+    if startMedian:
+        md=np.median(img)
+    else:
+        md=np.mean(img)
     n = float(len(img))
     std = np.sqrt(np.sum((img-md)**2.)/(n-1))
 

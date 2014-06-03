@@ -98,12 +98,20 @@ def nstar(image,id,xc,yc,
           readns,psfname,debug=False,
           doPrint=False,silent=False,
           varsky=False,faintlim=0.25,
-          ForcedPhot=False,noiseimage=[]):
+          ForcedPhot=False,noiseimage=[],
+          maskimage=[],
+          xyout=False,flux=False):
     image = image.astype(np.float64)
     if len(noiseimage):
         noiseimage = noiseimage.astype(np.float64)
+        badnoise = np.where(noiseimage == 0)
+        noiseimage[badnoise] = 1 # temporary fix!  should remove these pixels
         noise = True
     else: noise = False
+#    if len(maskimage):
+#        maskimage = maskimage.astype(np.float64)
+#        mask = True
+#    else: mask = False
     
     shapeid,shapexc,shapeyc,shapemags,shapesky,shapegroup = \
         shape(id),shape(xc),shape(yc),shape(mags),shape(sky),shape(group)
@@ -150,11 +158,14 @@ def nstar(image,id,xc,yc,
     else: groupid = np.unique(group)
 
     mag = mags                        #Save original magnitude vector
-    bad = where( mag > 99 )[0]     #Undefined magnitudes assigned 99.9
-    nbad = len(bad)
+    if not flux:
+        bad = where( mag > 99 )[0]     #Undefined magnitudes assigned 99.9
+        nbad = len(bad)
+    else: nbad = 0
 
     if nbad > 0: mag[bad] = psfmag + 7.5
-    mag = 10.**(-0.4*(mag-psfmag)) #Convert magnitude to brightness, scaled to PSF
+    if not flux:
+        mag = 10.**(-0.4*(mag-psfmag)) #Convert magnitude to brightness, scaled to PSF
     # fmt = '(I6,2F9.2,3F9.3,I4,F9.2,F9.3)'
 
     if doPrint:
@@ -227,6 +238,8 @@ def nstar(image,id,xc,yc,
             dimage = image[iymin:iymax+1,ixmin:ixmax+1]
             if noise:
                 dnoise = noiseimage[iymin:iymax+1,ixmin:ixmax+1]
+#            if mask:
+#                dmask = maskimage[iymin:iymax+1,ixmin:ixmax+1]
             xfitmin = xfitmin -ixmin ; yfitmin = yfitmin-iymin
             xfitmax = xfitmax -ixmin ; yfitmax = yfitmax-iymin
             #                                        Offset to the subarray
@@ -323,7 +336,7 @@ def nstar(image,id,xc,yc,
             psfmask = np.zeros([nstr,ngoodpix],dtype='b')
             d = dimage[igood] - skybar
             if noise:
-                dn = dimage[igood]
+                dn = dnoise[igood]
             for j in range(nstr):  #Masks of pixels within PSF radius of each star
                 x1 = xpsfmin[j]   ;    y1 = ypsfmin[j]
                 x2 = xpsfmax[j]   ;    y2 = ypsfmax[j]
@@ -393,6 +406,7 @@ def nstar(image,id,xc,yc,
                 numer[j] = np.sum(dfdsig*dsig/sigpsf)
                 denom[j] = np.sum(dfdsig**2/sigpsf)
 
+            #good = where((dn > 0) & (dm == 0))
             wt = wt/sigsq
             if clip:  #After 1st iteration, reduce weight of a bad pixel
                 wt = wt/(1.+(0.4*relerr/chiold)**8) 
@@ -413,7 +427,7 @@ def nstar(image,id,xc,yc,
             chibad = where(sumwt <= 3)[0]
             ngood = len(chibad)
             if ngood > 0: chi[chibad] = chiold
-
+            
             c = linalg.inv(c)
             x = np.dot(np.transpose(v),c)
 
@@ -552,7 +566,7 @@ def nstar(image,id,xc,yc,
 
             if not silent: 
                 for i in range(nstr): 
-                    print idg[i],xg[i],yg[i],\
+                    print idg,xg[i],yg[i],\
                         magg[i],err[i],skyg[i],niter,chi[i],sharp[i]
             if doPrint: 
                 for i in range(nstr): 
@@ -580,8 +594,10 @@ def nstar(image,id,xc,yc,
         return(-1,-1,-1,-1,-1,-1)
 
     if doPrint: fout.close()
-
-    return(mags,errmag,iter,chisq,sharp,peak)
+    if xyout:
+        return(mags,errmag,iter,chisq,sharp,peak,xc,yc)
+    else:
+        return(mags,errmag,iter,chisq,sharp,peak)
 
 def item_remove(index,array):
 
