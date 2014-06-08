@@ -292,9 +292,11 @@ class pkfit_class:
 
             wt = 5./(5.+rsq/(1.-rsq))
             lilrho = where(rhosq <= 36.)[0]   #Include only pixels within 6 sigma of centroid
-            if lilrho[0] == -1:
+            if not len(lilrho):
                 scale=1000000.0
                 errmag=100000
+                sharp=100000
+                chi=100000
                 if xyout:
                     return(errmag,chi,sharp,niter,scale,x,y)
                 else:

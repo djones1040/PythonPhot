@@ -315,6 +315,7 @@ class pkfit_class:
             if not len(lilrho[0]):
                 scale=1000000.0
                 errmag=100000
+                sharp=100000
                 # D. Jones added following Scolnic
                 chi=100000
                 return(errmag,chi,sharp,niter,scale)
