@@ -188,7 +188,7 @@ def getpsf(image,xc,yc,
         #                            Print the current star
             
         print 'STAR  X  Y  MAG  SKY'
-        print istar, xc[istar], yc[istar], mag[istar][0], sky[istar]
+        print istar, xc[istar], yc[istar], mag[istar], sky[istar]
         print ''
 
         if debug: print('GETPSF: Gaussian Fit Iteration')
@@ -309,7 +309,7 @@ def getpsf(image,xc,yc,
             continue    
 
         print 'STAR  X  Y  MAG  SKY'
-        print istar, xc[istar], yc[istar], mag[istar][0], sky[istar]
+        print istar, xc[istar], yc[istar], mag[istar], sky[istar]
         print ''
 
         f = image[ly:uy+1,lx:ux+1]
