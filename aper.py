@@ -1,7 +1,20 @@
 #!/usr/bin/env python
 #D. Jones - 1/15/14
 #S. Rodney - 2014.07.06
-"""This code is translated from the IDL Astronomy Users Library"""
+"""This code is translated from the IDL Astronomy Users Library
+
+example call:
+
+import aper
+import numpy as np
+image = pyfits.getdata(fits_filename)
+xpos,ypos = np.array([1450,1400]),np.array([1550,1600])
+mag,magerr,flux,fluxerr,sky,skyerr,badflag,outstr = \
+     aper.aper(image,xpos,ypos,phpadu=1,apr=5,zeropoint=25,
+               skyrad=[40,50],badpix=[-12000,60000],
+               exact=True)
+
+"""
 
 import numpy as np
 from scipy.stats import sigmaclip, skew

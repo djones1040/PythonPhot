@@ -1,7 +1,42 @@
 #!/usr/bin/env python
 # D. Jones - 1/10/14
 """This code is from the IDL Astronomy Users Library
-with modifications from Dan Scolnic.  Original doc:
+with modifications from Dan Scolnic.  
+
+example call:
+import pyfits
+import pkfit_norecent_noise as pkfit
+
+# read in the FITS images
+image = pyfits.getdata(fits_filename)
+noiseim = pyfits.getdata(fits_noise_filename)
+maskim = pyfits.getdata(fits__mask_filename)
+
+# read in the PSF image
+psf = pyfits.getdata(psf_filename)
+hpsf = pyfits.getheader(psf_filename)
+gauss = [hpsf['GAUSS1'],hpsf['GAUSS2'],hpsf['GAUSS3'],hpsf['GAUSS4'],hpsf['GAUSS5']]
+
+# x and y points for PSF fitting
+xpos,ypos = np.array([1450,1400]),np.array([1550,1600])
+
+# run 'aper' on x,y coords to get sky values
+mag,magerr,flux,fluxerr,sky,skyerr,badflag,outstr = \
+         aper.aper(image,xpos,ypos,phpadu=1,apr=5,zeropoint=25,
+         skyrad=[40,50],badpix=[-12000,60000],exact=True)
+
+# load the pkfit class
+pk = pkfit.pkfit_class(image,gauss,psf,1,1,noiseim,maskim)
+
+# do the PSF fitting
+for x,y,s in zip(xpos,ypos,sky):
+     errmag,chi,sharp,niter,scale = \
+         pk.pkfit_norecent_noise(1,x,y,s,5)
+     flux = scale*10**(0.4*(25.-hpsf['PSFMAG']))
+     dflux = errmag*10**(0.4*(25.-hpsf['PSFMAG']))
+     print('PSF fit to coords %.2f,%.2f gives flux %s +/- %s'%(x,y,flux,dflux))
+
+Original doc:
 ;+
 ; NAME:
 ;       PKFIT
