@@ -128,7 +128,7 @@ class pkfit_class:
         f = self.f; gauss = self.gauss; psf = self.psf
 
         if f.dtype != 'float64': f = f.astype('float64')
-        psf1d = psf.reshape(shape(psf)[0]**2.)
+#        psf1d = psf.reshape(shape(psf)[0]**2.)
         s = shape(f) #Get array dimensions
         nx = s[1] ; ny = s[0] #Initialize a few things for the solution
 
@@ -210,8 +210,8 @@ class pkfit_class:
             dy = dy[good[0]]
 
             model,dvdx,dvdy = dao_value.dao_value(dx, dy, gauss,
-                                                  psf, psf1d=psf1d,
-                                                  deriv=True,ps1d=True)
+                                                  psf, #psf1d=psf1d,
+                                                  deriv=True)#,ps1d=True)
 
             if debug: 
                 print('model created ')

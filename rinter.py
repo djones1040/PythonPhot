@@ -85,8 +85,11 @@ def rinter(p, x, y,
     if len(c) == 1:
         plen = int(sqrt(len(p)))
         c = asarray([plen,plen])
+        ps1d = True
     elif len(c) != 2 and len(c) != 1:
         print('Input array (first parameter) must be 1- or 2-dimensional')
+    else:
+        ps1d=False
 
     sx = shape(x)
 #    npts = sx[len(sx)+2]
@@ -100,8 +103,7 @@ def rinter(p, x, y,
     x1 = x0 + c[1] 
     x2 = x1 + c[1]
     
-#    if not ps1d:
-    if len(c) == 2:
+    if not ps1d:
         pshape = shape(p)
         p = p.reshape(pshape[0]*pshape[1])
 #    if init == 0:
@@ -149,6 +151,37 @@ def rinter(p, x, y,
             dy0  = xdist*(xdist*c3_new[x0 ]*3. + 2.*c2_new[x0]) + c1_new[x0]
             dy1  = xdist*(xdist*c3_new[x1 ]*3. + 2.*c2_new[x1]) + c1_new[x1]
             dy2  = xdist*(xdist*c3_new[x2 ]*3. + 2.*c2_new[x2]) + c1_new[x2]
+            d1 = 0.5*(dy1 - dy_1)
+            d2 = 2.*dy1 + dy_1 - 0.5*(5.*dy0 +dy2)
+            d3 = 0.5*( 3.*( dy0-dy1 ) + dy2 - dy_1)
+            dfdx =  ydist*( ydist*( ydist*d3 + d2 ) + d1 ) + dy0
+
+    else:
+
+        p_1 = p[xgood-1] ; p0 = p[xgood]
+        p1 = p[xgood+1] ; p2 = p[xgood+2]
+        c1 = p*0. ; c2 = p*0. ; c3 = p*0.
+        c1[xgood] = 0.5*( p1 - p_1)
+        c2[xgood] = 2.*p1 + p_1 - 0.5*(5.*p0 + p2)
+        c3[xgood] = 0.5*(3.*(p0 - p1) + p2 - p_1)
+            
+        x0,x1,x2,x_1 = x0.astype(int),x1.astype(int),x2.astype(int),x_1.astype(int)
+
+        y_1 = xdist*( xdist*( xdist*c3[x_1] +c2[x_1]) + \
+                          c1[x_1]) + p[x_1]
+        y0 =  xdist*( xdist*( xdist*c3[x0] +c2[x0]) + \
+                          c1[x0]) + p[x0]
+        y1 =  xdist*( xdist*( xdist*c3[x1] +c2[x1]) + \
+                          c1[x1]) + p[x1]
+        y2 =  xdist*( xdist*( xdist*c3[x2] +c2[x2]) + \
+                          c1[x2]) + p[x2]
+
+        if deriv:
+ 
+            dy_1 = xdist*(xdist*c3[x_1]*3. + 2.*c2[x_1]) + c1[x_1]
+            dy0  = xdist*(xdist*c3[x0 ]*3. + 2.*c2[x0]) + c1[x0]
+            dy1  = xdist*(xdist*c3[x1 ]*3. + 2.*c2[x1]) + c1[x1]
+            dy2  = xdist*(xdist*c3[x2 ]*3. + 2.*c2[x2]) + c1[x2]
             d1 = 0.5*(dy1 - dy_1)
             d2 = 2.*dy1 + dy_1 - 0.5*(5.*dy0 +dy2)
             d3 = 0.5*( 3.*( dy0-dy1 ) + dy2 - dy_1)

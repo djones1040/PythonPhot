@@ -285,7 +285,7 @@ def getpsf(image,xc,yc,
         psfgen = (np.arange(npsf) - ncen)/2.         #Index function for PSF array
         yy = psfgen + y   ;  xx = psfgen + x
         xx,yy = make_2d(xx,yy)
-        psf = rinter(f, xx, yy, deriv=False, ps1d=False)            #Interpolate residuals onto current star
+        psf = rinter(f, xx, yy, deriv=False )            #Interpolate residuals onto current star
 
         gauss = np.array([h,dxcen,dycen,sigx,sigy])
         goodstar = nstrps                   #Index of first good star
@@ -351,7 +351,7 @@ def getpsf(image,xc,yc,
         xx = psfgen + x
         yy = psfgen + y 
         xx,yy = make_2d(xx,yy)
-        psftemp = rinter(f,xx,yy,deriv=False,ps1d=False)
+        psftemp = rinter(f,xx,yy,deriv=False)
 
         # deal with bad pixels
         nanrow = np.where(psftemp != psftemp)
