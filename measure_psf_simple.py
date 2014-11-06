@@ -3,40 +3,37 @@
 
 import numpy as np
 
-def measure_psf_simple(image, xcen, ycen, 
+def measure_psf_simple(image, xcen, ycen,
                        boxsize=9, scale=1.2):
-    """;
-    ; Measure object shape from second-order moments
-    ; using circular Gaussian weight
-    ;
-    ; Input parameters:
-    ; image       Observed image, arbitrary units (sky-subtracted; array, float)
-    ; xcen        Input X coordinates (vector, float)
-    ; ycen        Input Y coordinates (vector, float)
-    ; boxsize     Linear size of extraction box (integer, scalar) (defaults to 9 pixels)
-    ; scale       Scale of Gaussian weight (one-dimensional sigma, pixels) (float, scalar)
-    ;
-    ; Note: boxsize=9, scale=1.2 to 1.5 works well for WFC; probably
-    ; boxsize=13, scale=2.5 is needed for HRC.
-    ;
-    ; Output parameters:
-    ; moments     Vector with weighted moments (float, array; returned by function)
-    ;
-    ; Note: moments is an nsource*10 array, with all elements set to zero
-    ; for sources that are too close to the edge
-    ;
-    ; The 10 elements are: xcen(input), ycen(input), total, scale, m0,
-    ;                      mx, my, mxx, mxy, myy
-    ;
-    ; Possible enhancements:
-    ; -> Allow for adaptive weight scale
-    ; -> Input weight/flag image
-    ; -> Return flag array
-    ;
-    if (keyword_set(scale) eq 0) then scale=1.2
-    if (keyword_set(boxsize) eq 0) then boxsize=9
-    ;
-    ; Exclude stars too close to edge"""
+    """Measure object shape from second-order moments
+    using circular Gaussian weight.  Converted from IDL
+    to Python
+    
+    INPUT PARAMETERS:
+         image    -   Observed image, arbitrary units (sky-subtracted; array, float)
+         xcen     -   Input X coordinates (vector, float)
+         ycen     -   Input Y coordinates (vector, float)
+         boxsize  -   Linear size of extraction box (integer, scalar) (defaults to 9 pixels)
+         scale    -   Scale of Gaussian weight (one-dimensional sigma, pixels) (float, scalar)
+    
+         Note: boxsize=9, scale=1.2 to 1.5 works well for WFC; probably
+          boxsize=13, scale=2.5 is needed for HRC.
+    
+     RETURNS:
+          moments -   Vector with weighted moments (float, array; returned by function)
+    
+          Note: moments is an nsource*10 array, with all elements set to zero
+           for sources that are too close to the edge
+    
+     The 10 elements are: xcen(input), ycen(input), total, scale, m0,
+                          mx, my, mxx, mxy, myy
+    
+     Possible enhancements:
+     -> Allow for adaptive weight scale
+     -> Input weight/flag image
+     -> Return flag array
+     -> Exclude stars too close to edge
+     """
 
     ss = np.shape (image)
     nx = ss[1]
@@ -48,7 +45,7 @@ def measure_psf_simple(image, xcen, ycen,
     ymat = np.zeros ([boxsize, boxsize])
     for i in range(boxsize): xmat[:,i] = i
     for j in range(boxsize): ymat[j,:] = j
-
+    
     moments = np.zeros ([10,nsources])
 
     if nsources == 1: xcen,ycen = [xcen],[ycen]

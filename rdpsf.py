@@ -6,33 +6,29 @@ import numpy as np
 import dao_value
 import pyfits
 
-def rdpsf2(psfname):
-    """;+
-    ; NAME:
-    ;       RDPSF
-    ; PURPOSE:
-    ;       Read the FITS file created by GETPSF in the DAOPHOT sequence
-    ; EXPLANATION:
-    ;       Combines the Gaussian with the residuals to create an output PSF array.
-    ;
-    ; CALLING SEQUENCE:
-    ;       RDPSF, PSF, HPSF, [ PSFname]
-    ;
-    ; OPTIONAL INPUTS
-    ;       PSFname - string giving the name of the FITS file containing the PSF
-    ;               residuals
-    ;
-    ; OUTPUTS
-    ;       psf - array containing the actual PSF
-    ;       hpsf - header associated with psf
-    ;
-    ; PROCEDURES CALLED:
-    ;       DAO_VALUE(), MAKE_2D, SXADDPAR, READFITS(), SXPAR()
-    ; REVISION HISTORY:
-    ;       Written W. Landsman              December, 1988
-    ;       Checked for IDL Version 2, J. Isensee & J. Hill, December, 1990
-    ;       Converted to IDL V5.0   W. Landsman   September 1997
-    ;-"""
+def rdpsf(psfname):
+    """Read the FITS file created by GETPSF in the DAOPHOT sequence
+
+    Combines the Gaussian with the residuals to create an output PSF array.
+    
+    psf,hpsf = rdpsf.rdpsf( PSFname )
+    
+    INPUTS:
+         PSFname - string giving the name of the FITS file containing the PSF
+                    residuals
+     
+    RETURNS:
+         psf - array containing the actual PSF
+         hpsf - header associated with psf
+     
+    PROCEDURES CALLED:
+         DAO_VALUE()
+    REVISION HISTORY:
+         Written                          W. Landsman              December,  1988
+         Checked for IDL Version 2        J. Isensee & J. Hill     December,  1990
+         Converted to IDL V5.0            W. Landsman              September, 1997
+         Converted to Python              D. Jones                 January,   2014
+    """
 
     resid=pyfits.getdata(psfname)
     hpsf = pyfits.getheader(psfname)

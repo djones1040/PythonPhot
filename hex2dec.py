@@ -1,52 +1,32 @@
 #!/usr/bin/env python
 #D. Jones - 1/14/14
 
-"""
-This code has been converted from the IDL source code
-at http://www.astro.washington.edu/docs/idl/cgi-bin/getpro/library32.html?HEX2DEC
-;+
-; Project     : SOHO - CDS     
-;                   
-; Name        : HEX2DEC
-;               
-; Purpose     : Convert hexadecimal representation to decimal integer.
-;               
-; Explanation : A hexadecimal string is converted to a decimal integer and 
-;               can be displayed or returned or both or neither.
-;               
-; Use         : IDL> hex2dec, hex [, decimal, /quiet]
-;    
-; Inputs      : hex - hexadecimal string
-;
-; Opt. Inputs : None
-;               
-; Outputs     : See below
-;               
-; Opt. Outputs: decimal - the decimal integer equivalent of the input.
-;               
-; Keywords    : quiet - unless given the decimal number is printed to the
-;                       terminal
-;
-; Calls       : None
-;               
-; Restrictions: Input must be a string.
-;               
-; Side effects: None
-;               
-; Category    : Utils, Numerical
-;               
-; Prev. Hist. : None
-;
-; Written     : C D Pike, RAL, 7-Oct-93
-;               
-; Modified    : 
-;
-; Version     : Version 1, 7-Oct-93
-;-            """
-
 import exceptions
 
-def hex2dec(inp,quiet=False):
+def hex2dec(inp,verbose=True):
+    """This code has been converted from the IDL source code
+    at http://www.astro.washington.edu/docs/idl/cgi-bin/getpro/library32.html?HEX2DEC
+    Convert hexadecimal representation to decimal integer.
+               
+    Explanation : A hexadecimal string is converted to a decimal integer and 
+                  can be displayed or returned or both or neither.
+
+    Use         : decimal = hex2dec.hex2dec(hex, verbose=True)
+    Inputs      : hex - hexadecimal string
+    Opt. Inputs : None
+    Outputs     : See below
+    Opt. Outputs: decimal - the decimal integer equivalent of the input.               
+    Keywords    : verbose - if given the decimal number is printed to the
+                             terminal.  Default = True.
+    Calls       : None
+    Restrictions: Input must be a string.
+    Side effects: None
+    Category    : Utils, Numerical
+    Prev. Hist. : None
+    Written     : C D Pike, RAL, 7-Oct-93
+    Modified    : Converted to Python, D. Jones, January 2014
+    Version     : Version 1, 7-Oct-93
+"""
 
     #
     #  trap invalid input
@@ -83,5 +63,5 @@ def hex2dec(inp,quiet=False):
 #
 #  if not silenced, print result
 #
-    if not quiet: print(out)
+    if verbose: print(out)
     return(out)

@@ -5,52 +5,44 @@ import numpy as np
 
 def meanclip(image, 
              clipsig=3, maxiter=5,
-             converge_num=0.02, verbose=False):
-    """;+
-    ; NAME:
-    ;       MEANCLIP
-    ;
-    ; PURPOSE:
-    ;       Computes an iteratively sigma-clipped mean on a data set
-    ; EXPLANATION:
-    ;       Clipping is done about median, but mean is returned.
-    ;       Called by SKYADJ_CUBE
-    ;
-    ; CATEGORY:
-    ;       Statistics
-    ;
-    ; CALLING SEQUENCE:
-    ;       MEANCLIP, Data, Mean, [ Sigma, SUBS =
-    ;              CLIPSIG=, MAXITER=, CONVERGE_NUM=, /VERBOSE, /DOUBLE ]
-    ;
-    ; INPUT POSITIONAL PARAMETERS:
-    ;       Data:     Input data, any numeric array
-    ;       
-    ; OUTPUT POSITIONAL PARAMETERS:
-    ;       Mean:     N-sigma clipped mean.
-    ;       Sigma:    Standard deviation of remaining pixels.
-    ;
-    ; INPUT KEYWORD PARAMETERS:
-    ;       CLIPSIG:  Number of sigma at which to clip.  Default=3
-    ;       MAXITER:  Ceiling on number of clipping iterations.  Default=5
-    ;       CONVERGE_NUM:  If the proportion of rejected pixels is less
-    ;           than this fraction, the iterations stop.  Default=0.02, i.e.,
-    ;           iteration stops if fewer than 2% of pixels excluded.
-    ;       /VERBOSE:  Set this flag to get messages.
-    ;       /DOUBLE - if set then perform all computations in double precision.
-    ;                 Otherwise double precision is used only if the input
-    ;                 data is double
-    ; OUTPUT KEYWORD PARAMETER:
-    ;       SUBS:     Subscript array for pixels finally used.
-    ;
-    ;
-    ; MODIFICATION HISTORY:
-    ;       Written by:     RSH, RITSS, 21 Oct 98
-    ;       20 Jan 99 - Added SUBS, fixed misplaced paren on float call, 
-    ;                   improved doc.  RSH
-    ;       Nov 2005   Added /DOUBLE keyword, check if all pixels are removed  
-    ;                  by clipping W. Landsman 
-    ;-"""
+             converge_num=0.02, verbose=False
+             returnSubs=False):
+    """Computes an iteratively sigma-clipped mean on a data set
+    Clipping is done about median, but mean is returned.
+    Converted from IDL to Python.
+    
+    CALLING SEQUENCE:
+        mean,sigma = meanclip( data, clipsig=, maxiter=,
+                               converge_num=, verbose=,
+                               returnSubs=False)
+        mean,sigma,subs = meanclip( data, clipsig=, maxiter=,
+                                    converge_num=, verbose=,
+                                    returnSubs=True)
+
+    INPUT PARAMETERS:
+         data           -  Input data, any numeric array
+
+    OPTIONAL INPUT PARAMETERS:
+         clipsig        -  Number of sigma at which to clip.  Default=3
+         maxiter        -  Ceiling on number of clipping iterations.  Default=5
+         converge_num   -  If the proportion of rejected pixels is less
+                            than this fraction, the iterations stop.  Default=0.02, i.e.,
+                            iteration stops if fewer than 2% of pixels excluded.
+         verbose        -  Set this flag to get messages.
+         returnSubs     -  if True, return subscript array for pixels finally used
+           
+    RETURNS:
+         mean           -  N-sigma clipped mean.
+         sigma          -  Standard deviation of remaining pixels.
+    
+    MODIFICATION HISTORY:
+         Written by:       RSH, RITSS, 21 Oct 98
+         20 Jan 99   -     Added SUBS, fixed misplaced paren on float call, 
+                            improved doc.  RSH
+         Nov 2005    -     Added /DOUBLE keyword, check if all pixels are removed  
+                            by clipping W. Landsman 
+         Jan. 2014   -     Converted from IDL to Python by D. Jones
+    """
 
     prf = 'MEANCLIP:  '
     
@@ -81,4 +73,7 @@ def meanclip(image,
         print(prf+'Mean computed in ',iter,' iterations')
         print(prf+'Mean = ',mean,',  sigma = ',sigma)
 
-    return(mean,sigma)
+    if not returnSubs:
+        return(mean,sigma)
+    else:
+        return(mean,sigma,subs)

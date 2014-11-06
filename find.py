@@ -10,96 +10,81 @@ def find(image,
          roundlim, 
          sharplim,
          doprint = False, 
-         silent = False, 
-         monitor = False):
-    """;+
-    ; NAME:
-    ;	FIND
-    ; PURPOSE:
-    ;	Find positive brightness perturbations (i.e stars) in an image 
-    ; EXPLANATION:
-    ;	Also returns centroids and shape parameters (roundness & sharpness).
-    ;	Adapted from 1991 version of DAOPHOT, but does not allow for bad pixels
-    ;       and uses a slightly different centroid algorithm.
-    ;
-    ;       Modified in March 2008 to use marginal Gaussian fits to find centroids       
-    ; CALLING SEQUENCE:
-    ;	FIND, image, [ x, y, flux, sharp, round, hmin, fwhm, roundlim, sharplim 
-    ;		PRINT= , /SILENT, /MONITOR]
-    ;
-    ; INPUTS:
-    ;	image - 2 dimensional image array (integer or real) for which one
-    ;		wishes to identify the stars present
-    ;
-    ; OPTIONAL INPUTS:
-    ;	FIND will prompt for these parameters if not supplied
-    ;
-    ;	hmin -  Threshold intensity for a point source - should generally 
-    ;		be 3 or 4 sigma above background RMS
-    ;	fwhm  - FWHM (in pixels) to be used in the convolve filter
-    ;	sharplim - 2 element vector giving low and high cutoff for the
-    ;		sharpness statistic (Default: [0.2,1.0] ).   Change this
-    ;		default only if the stars have significantly larger or 
-    ;		or smaller concentration than a Gaussian
-    ;	roundlim - 2 element vector giving low and high cutoff for the
-    ;		roundness statistic (Default: [-1.0,1.0] ).   Change this 
-    ;		default only if the stars are significantly elongated.
-    ;
-    ; OPTIONAL INPUT KEYWORDS:
-    ;       /MONITOR - Normally, FIND will display the results for each star 
-    ;                only if no output variables are supplied.   Set /MONITOR
-    ;                to always see the result of each individual star.
-    ;	/SILENT - set /SILENT keyword to suppress all output display 
-    ;	PRINT - if set and non-zero then FIND will also write its results to
-    ;		a file find.prt.   Also one can specify a different output file 
-    ;		name by setting PRINT = 'filename'.
-    ;
-    ; OPTIONAL OUTPUTS:
-    ;	x - vector containing x position of all stars identified by FIND
-    ;	y-  vector containing y position of all stars identified by FIND
-    ;	flux - vector containing flux of identified stars as determined
-    ;		by a Gaussian fit.  Fluxes are NOT converted to magnitudes.
-    ;	sharp - vector containing sharpness statistic for identified stars
-    ;	round - vector containing roundness statistic for identified stars
-    ;
-    ; NOTES:
-    ;	(1) The sharpness statistic compares the central pixel to the mean of 
-    ;       the surrounding pixels.   If this difference is greater than the 
-    ;       originally estimated height of the Gaussian or less than 0.2 the height of the
-    ;	Gaussian (for the default values of SHARPLIM) then the star will be
-    ;	rejected. 
-    ;
-    ;       (2) More recent versions of FIND in DAOPHOT allow the possibility of
-    ;       ignoring bad pixels.    Unfortunately, to implement this in IDL
-    ;       would preclude the vectorization made possible with the CONVOL function
-    ;       and would run extremely slowly.
-    ;
-    ;       (3) Modified in March 2008 to use marginal Gaussian distributions to 
-    ;       compute centroid.   (Formerly, find.pro determined centroids by locating
-    ;       where derivatives went to zero -- see cntrd.pro for this algorithm.   
-    ;       This was the method used in very old (~1984) versions of DAOPHOT. )   
-    ;       As discussed in more  detail in the comments to the code, the  centroid
-    ;       computation here is  the same as in IRAF DAOFIND but differs slightly 
-    ;       from the current DAOPHOT.
-    ; PROCEDURE CALLS:
-    ;	GETOPT()
-    ; REVISION HISTORY:
-    ;	Written W. Landsman, STX  February, 1987
-    ;	ROUND now an internal function in V3.1   W. Landsman July 1993
-    ;	Change variable name DERIV to DERIVAT    W. Landsman Feb. 1996
-    ;	Use /PRINT keyword instead of TEXTOUT    W. Landsman May  1996
-    ;	Changed loop indices to type LONG       W. Landsman Aug. 1997
-    ;       Replace DATATYPE() with size(/TNAME)   W. Landsman Nov. 2001
-    ;       Fix problem when PRINT= filename   W. Landsman   October 2002
-    ;       Fix problems with >32767 stars   D. Schlegel/W. Landsman Sep. 2004
-    ;       Fix error message when no stars found  S. Carey/W. Landsman Sep 2007
-    ;       Rewrite centroid computation to use marginal Gaussians W. Landsman 
-    ;                 Mar 2008
-    ;       Added Monitor keyword, /SILENT now suppresses all output 
-    ;                   W. Landsman    Nov 2008
-    ;       Work when threshold is negative (difference images) W. Landsman May 2010
-    ;-
-    ;"""
+         verbose = True):
+    """Find positive brightness perturbations (i.e stars) in an image.
+    Also returns centroids and shape parameters (roundness & sharpness).
+    Adapted from 1991 version of DAOPHOT, but does not allow for bad pixels
+    and uses a slightly different centroid algorithm.  Modified in March 
+    2008 to use marginal Gaussian fits to find centroids.  Translated from
+    IDL to Python in 2014.
+    
+    CALLING SEQUENCE:
+         import find
+         x,y,flux,sharp,round = find.find(image,hmin, fwhm, roundlim, sharplim)
+    
+    INPUTS:
+         image -    2 dimensional image array (integer or real) for which one
+    		     wishes to identify the stars present
+    	 hmin  -    Threshold intensity for a point source - should generally 
+                     be 3 or 4 sigma above background RMS
+    	 fwhm  -    FWHM (in pixels) to be used in the convolve filter
+    	 sharplim - 2 element vector giving low and high cutoff for the
+    		     sharpness statistic (Default: [0.2,1.0] ).   Change this
+    		     default only if the stars have significantly larger or 
+    		     or smaller concentration than a Gaussian
+    	 roundlim - 2 element vector giving low and high cutoff for the
+    		     roundness statistic (Default: [-1.0,1.0] ).   Change this 
+    		     default only if the stars are significantly elongated.
+    
+    OPTIONAL INPUT KEYWORDS:
+    	verbose - set verbose = False to suppress all output display.  Default = True.
+    	doprint - if set and non-zero then FIND will also write its results to
+    		  a file find.prt.   Also one can specify a different output file 
+    		  name by setting doprint = 'filename'.
+    
+     RETURNS:
+    	x     -  vector containing x position of all stars identified by FIND
+    	y     -  vector containing y position of all stars identified by FIND
+    	flux  -  vector containing flux of identified stars as determined
+    		  by a Gaussian fit.  Fluxes are NOT converted to magnitudes.
+    	sharp -  vector containing sharpness statistic for identified stars
+    	round -  vector containing roundness statistic for identified stars
+    
+    NOTES:
+         (1) The sharpness statistic compares the central pixel to the mean of 
+              the surrounding pixels.  If this difference is greater than the 
+              originally estimated height of the Gaussian or less than 0.2 the height of the
+    	      Gaussian (for the default values of SHARPLIM) then the star will be
+    	      rejected. 
+    
+         (2) More recent versions of FIND in DAOPHOT allow the possibility of
+              ignoring bad pixels.  Unfortunately, to implement this in IDL
+              would preclude the vectorization made possible with the CONVOL function
+              and would run extremely slowly.
+    
+         (3) Modified in March 2008 to use marginal Gaussian distributions to 
+              compute centroid.  (Formerly, find.pro determined centroids by locating
+              where derivatives went to zero -- see cntrd.pro for this algorithm.   
+              This was the method used in very old (~1984) versions of DAOPHOT. )   
+              As discussed in more detail in the comments to the code, the  centroid
+              computation here is the same as in IRAF DAOFIND but differs slightly 
+              from the current DAOPHOT.
+
+     REVISION HISTORY:
+    	Written                                                    W. Landsman, STX           February,  1987
+    	ROUND now an internal function in V3.1                     W. Landsman                July,      1993
+    	Change variable name DERIV to DERIVAT                      W. Landsman                February,  1996
+    	Use /PRINT keyword instead of TEXTOUT                      W. Landsman                May,       1996
+    	Changed loop indices to type LONG                          W. Landsman                August,    1997
+        Replace DATATYPE() with size(/TNAME)                       W. Landsman                November,  2001
+        Fix problem when PRINT= filename                           W. Landsman                October,   2002
+        Fix problems with >32767 stars                             D. Schlegel/W. Landsman    September, 2004
+        Fix error message when no stars found                      S. Carey/W. Landsman       September, 2007
+        Rewrite centroid computation to use marginal Gaussians     W. Landsman                March,     2008
+        Added Monitor keyword, /SILENT now suppresses all output   W. Landsman                November,  2008
+        Work when threshold is negative (difference images)        W. Landsman                May,       2010
+        Converted from IDL to Python                               D. Jones                   January,   2014
+    """
 
     # Determine if hardcopy output is desired
     doprint = doprint
@@ -113,7 +98,7 @@ def find(image,
     if len(type) != 2:
         print('ERROR - Image array (first parameter) must be 2 dimensional')
     n_x  = type[1] ; n_y = type[0]
-    if not silent:
+    if verbose:
         print('Input Image Size is '+str(n_x) + ' by '+ str(n_y))
 
     if fwhm < 0.5:
@@ -199,7 +184,7 @@ def find(image,
     sumc1sq = np.sum(c1**2) - sumc1
     c1 = (c1-sumc1)/sumc1sq
 
-    if not silent:
+    if verbose:
         print('RELATIVE ERROR computed from FWHM ' + str(np.sqrt(np.sum(c[good[0],good[1]]**2))))
 
 
@@ -211,7 +196,7 @@ def find(image,
     h[:,0:nhalf] = minh ; h[:,n_x-nhalf:n_x] = minh
     h[0:nhalf,:] = minh ; h[n_y-nhalf:n_y-1,:] = minh
 
-    if not silent:
+    if verbose:
         print('Finished convolution of image')
 
     mask[middle,middle] = 0	#From now on we exclude the central pixel
@@ -253,7 +238,7 @@ def find(image,
     iy = index[0] # /n_x                  #Y index of local maxima
     ngood = len(index[0])
 
-    if not silent:
+    if verbose:
         print(str(ngood)+' local maxima located above threshold')
 
     nstar = 0       	#NSTAR counts all stars meeting selection criteria
@@ -267,7 +252,7 @@ def find(image,
 
          if doprint == 1: file = 'find.prt'
          else: file = doprint
-         if not silent:
+         if verbose:
              print('Results will be written to a file ' + file)
          fout = open(file,'w')
          print >> fout, ' Program: FIND '+ systime()
@@ -277,7 +262,7 @@ def find(image,
          print >> fout,' Roundness Limits: Low',roundlim[0],'  High',roundlim[1]
          print >> fout,' No of sources above threshold',ngood
 
-    if not silent:
+    if verbose:
         print('     STAR      X      Y     FLUX     SHARP    ROUND')
 
     #  Loop over star positions# compute statistics
@@ -384,7 +369,7 @@ def find(image,
         print >> fout,' No. of sources rejected by ROUNDNESS criteria',badround
         print >> fout,' No. of sources rejected by CENTROID  criteria',badcntrd
  
-    if not silent:
+    if verbose:
         print(' No. of sources rejected by SHARPNESS criteria',badsharp)
         print(' No. of sources rejected by ROUNDNESS criteria',badround)
         print(' No. of sources rejected by CENTROID  criteria',badcntrd)
@@ -403,5 +388,5 @@ def find(image,
             print >> fout,i+1, x[i], y[i], flux[i], sharp[i], roundness[i]
 
 # FINISH:
-
+    fout.close()
     return(x,y,flux,sharp,roundness)

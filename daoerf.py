@@ -1,53 +1,51 @@
 #!/usr/bin/env python
 # D. Jones - 2/13/14
-"""This code is from the IDL Astronomy Users Library 
-and uses GAUSSINT (called cdf here) from 
-http://www.mpia-hd.mpg.de/homes/ianc/python/_modules/spec.html"""
 
 import numpy as np
-#from scipy.stats import norm as nor
-#cdf = nor.cdf
 from scipy.special import erf
 
 sqrt,shape,zeros,exp = np.sqrt,np.shape,np.zeros,np.exp
 
-def daoerf(x,y,a): #DAOphot ERRor function
-    """;+
-    ; NAME:
-    ;DAOERF
-    ; PURPOSE:         
-    ;Calulates the intensity, and derivatives, of a 2-d Gaussian PSF
-    ; EXPLANATION:
-    ;Corrects for the finite size of a pixel by integrating the Gaussian
-    ;over the size of the pixel.    Used in the IDL-DAOPHOT sequence.   
-    ;
-    ; CALLING SEQUENCE:
-    ;DAOERF, XIN, YIN, A, F, [ PDER ] 
-    ;
-    ; INPUTS:
-    ;XIN - input scalar, vector or array, giving X coordinate values
-    ;YIN - input scalar, vector or array, giving Y coordinate values, must 
-    ;have same number of elements as XIN.
-    ;A - 5 element parameter array describing the Gaussian
-    ;A(0) - peak intensity
-    ;A(1) - X position of peak intensity (centroid)
-    ;A(2) - Y position of peak intensity (centroid)
-    ;A(3) - X sigma of the gaussian (=FWHM/2.345)         
-    ;A(4) - Y sigma of gaussian
-    ;
-    ; OUTPUTS:
-    ;F - array containing value of the function at each (XIN,YIN) 
-    ;    The number of output elements in F and PDER is identical with
-    ;the number of elements in X and Y
-    ;
-    ; OPTIONAL OUTPUTS:
-    ;PDER - 2 dimensional array of size (NPTS,5) giving the analytic
-    ;derivative at each value of F with respect to each parameter A.
-    ;
-    ; REVISION HISTORY:
-    ;Written: W. Landsman                October, 1987
-    ;Converted to IDL V5.0   W. Landsman   September 1997
-    ;-"""
+def daoerf(x,y,a):
+    """Calulates the intensity, and derivatives, of a 2-d Gaussian PSF
+    (adapted for IDL from DAOPHOT, then translated from IDL to Python).
+
+    Corrects for the finite size of a pixel by integrating the Gaussian
+    over the size of the pixel.    Used in the IDL-DAOPHOT sequence.   
+
+    This code is from the IDL Astronomy Users Library 
+    and uses GAUSSINT (called cdf here) from 
+    http://www.mpia-hd.mpg.de/homes/ianc/python/_modules/spec.html
+    
+    CALLING SEQUENCE:
+      f,pder = daoerf.daoerf(x, y, a)
+
+    INPUTS:
+         x - input scalar, vector or array, giving X coordinate values
+         y - input scalar, vector or array, giving Y coordinate values, must 
+             have same number of elements as XIN.
+         a - 5 element parameter array describing the Gaussian
+             A[0] - peak intensity
+             A[1] - X position of peak intensity (centroid)
+             A[2] - Y position of peak intensity (centroid)
+             A[3] - X sigma of the gaussian (=FWHM/2.345)         
+             A[4] - Y sigma of gaussian
+    
+    OUTPUTS:
+         f - array containing value of the function at each (XIN,YIN).
+              The number of output elements in F and PDER is identical with
+              the number of elements in X and Y
+
+    OPTIONAL OUTPUTS:
+         pder - 2 dimensional array of size (NPTS,5) giving the analytic
+                 derivative at each value of F with respect to each parameter A.
+
+    REVISION HISTORY:
+         Written                           W. Landsman                October,   1987
+         Converted to IDL V5.0             W. Landsman                September, 1997
+         Converted from IDL to Python      D. Jones                   January,   2014
+    """
+
     norm = 2.506628275 #norm = sqrt(2*!pi)
 
     if len(shape(x)) > 1:
@@ -77,16 +75,15 @@ def daoerf(x,y,a): #DAOphot ERRor function
 
 def cdf(x):
     """ 
-    :PURPOSE:
-        Compute the integral from -inf to x of the normalized Gaussian
+    PURPOSE:
+         Compute the integral from -inf to x of the normalized Gaussian
 
-    :INPUTS:
-        x : scalar
-            upper limit of integration
+    INPUTS:
+         x : scalar upper limit of integration
 
-    :NOTES:
-        Designed to copy the IDL function of the same name.
-        """
+    NOTES:
+         Designed to copy the IDL function of the same name.
+    """
     # 2011-10-07 15:41 IJMC: Created
 
     scalefactor = 1./sqrt(2)

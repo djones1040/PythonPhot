@@ -75,7 +75,7 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                    to compute a sky value.   The 3 element form of SETSKYVAL
                    is needed for accurate error budgeting.
 
-     OUTPUTS:
+     RETURNS:
          mags   -  NAPER by NSTAR array giving the magnitude for each star in
                    each aperture.  (NAPER is the number of apertures, and NSTAR
                    is the number of stars).   A flux of 1 digital unit is assigned

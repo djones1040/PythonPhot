@@ -2,85 +2,81 @@
 #D. Jones - 1/13/14
 """The IDL source code for this routine is at
 http://spectro.princeton.edu/idlutils_doc.html#DJS_ANGLE_MATCH
-;------------------------------------------------------------------------------
-;+
-; NAME:
-;   djs_angle_match
-;
-; PURPOSE:
-;   Given two lists of coordinates on a sphere, find matches within an
-;   angular distance.  For each entry in list A, find all the entries
-;   in list B that lie within an angular distance dtheta.
-;   Optionally output up to mmax of these matches per entry, giving
-;   the index number of the matches in mindx, and the angular distance
-;   in mdist.
-;
-;   If the lists A and B are different, then the total number of pairs
-;   is given by total(mcount).
-;   If the lists A and B are the same, then the total number of unique
-;   pairs is given by (total(mcount) - N_elements(raA)) / 2.
-;
-;   This function loops over the objects in each list (sort of), so it's
-;   not very fast.
-;
-; CALLING SEQUENCE:
-;   ntot = djs_angle_match( raA, decA, [raB, decB,] dtheta=dtheta, $
-;    [ mcount=mcount, mindx=mindx, mdist=mdist, mmax=mmax, units=units ]
-;
-; INPUTS:
-;   raA:        RA of first point(s) in radians/degrees/hours
-;   decA:       DEC of first point(s) in radians/degrees
-;   dtheta:     Maximum angular distance for points to be considered matches
-;
-; OPTIONAL INPUTS:
-;   raB:        RA of second point(s) in radians/degrees/hours
-;   decB:       DEC of second point(s) in radians/degrees
-;   mmax:       Maximum number of matches per point.  Default to 1.
-;   units:      Set to
-;                  degrees - All angles in degrees
-;                  hrdeg - RA angles in hours, DEC angles and output in degrees
-;                  radians - All angles in radians
-;               Default to "degrees".
-;
-; OUTPUTS:
-;   ntot:       Total number of points A with one or more matches in B
-;
-; OPTIONAL OUTPUTS:
-;   mcount:     For each A, number of matches in B.  Vector of length A.
-;   mindx:      For each A, indices of matches in B, sorted by their distance.
-;               If mmax > 1, this array is of dimensions (mmax, A).
-;               For each A, only the values (0:mcount-1,A) are relevant.
-;               If mmax = 1, then the return value is a vector.
-;               Any unused array elements are set to -1.
-;   mdist:      For each A, distance to matches in B, sorted by their distance.
-;               If mmax > 1, this array is of dimensions (mmax, A).
-;               For each A, only the values (0:mcount-1,A) are relevant.
-;               If mmax = 1, then the return value is a vector.
-;               Any unused array elements are set to -1.
-;
-; COMMENTS:
-;   By specifying only one set of coordinates (raA, decA), matches are found
-;   within that list, but avoiding duplicate matches (i.e., matching 1 to 2
-;   and then 2 to 1) and avoiding matching an object with itself (i.e.,
-;   matching 1 to 1).  If you wish to include self-matches and duplicates,
-;   then call with raB=raA and decB=decA.
-;
-; PROCEDURES CALLED:
-;   djs_diff_angle()
-;
-; INTERNAL PROCEDURES:
-;   djs_angle_1match()
-;   djs_angle_2match()
-;
-; REVISION HISTORY:
-; REVISION HISTORY:
-;   27-May-1997  Written by David Schlegel, Durham
-;   24-Feb-1999  Converted to IDL 5 (DJS)
-;   05-Mar-1999  Made the internal routines for more efficient matching
-;                within the same coordinate list without duplicates, e.g.
-;                by only specifying raA, decA and not raB, decB.
-;-
-;------------------------------------------------------------------------------"""
+
+Given two lists of coordinates on a sphere, find matches within an
+angular distance.  For each entry in list A, find all the entries
+in list B that lie within an angular distance dtheta.
+Optionally output up to mmax of these matches per entry, giving
+the index number of the matches in mindx, and the angular distance
+in mdist.
+
+If the lists A and B are different, then the total number of pairs
+is given by total(mcount).
+If the lists A and B are the same, then the total number of unique
+pairs is given by (total(mcount) - N_elements(raA)) / 2.
+
+This function loops over the objects in each list (sort of), so it's
+not very fast.
+
+CALLING SEQUENCE:
+     import djs_angle_match
+     ntot,mindx,mcount = djs_angle_match.djs_angle_match( raA, decA, raB, decB, dtheta=dtheta,
+                                                          mmax=mmax, units=units )
+     ntot,mindx,mcount,mdist = djs_angle_match.djs_angle_match( raA, decA, raB, decB, dtheta=dtheta,
+                                                                mmax=mmax, units=units, mdist=True )
+
+ INPUTS:
+   raA:        RA of first point(s) in radians/degrees/hours
+   decA:       DEC of first point(s) in radians/degrees
+   raB:        RA of second point(s) in radians/degrees/hours
+   decB:       DEC of second point(s) in radians/degrees
+   dtheta:     Maximum angular distance for points to be considered matches
+
+ OPTIONAL INPUTS:
+   mmax:       Maximum number of matches per point.  Default to 1.
+   units:      Set to
+                  degrees - All angles in degrees
+                  hrdeg - RA angles in hours, DEC angles and output in degrees
+                  radians - All angles in radians
+               Default to "degrees".
+
+ RETURNS:
+   ntot:       Total number of points A with one or more matches in B
+   mcount:     For each A, number of matches in B.  Vector of length A.
+   mindx:      For each A, indices of matches in B, sorted by their distance.
+               If mmax > 1, this array is of dimensions (mmax, A).
+               For each A, only the values (0:mcount-1,A) are relevant.
+               If mmax = 1, then the return value is a vector.
+               Any unused array elements are set to -1.
+   mdist:      For each A, distance to matches in B, sorted by their distance.
+               If mmax > 1, this array is of dimensions (mmax, A).
+               For each A, only the values (0:mcount-1,A) are relevant.
+               If mmax = 1, then the return value is a vector.
+               Any unused array elements are set to -1.
+
+ COMMENTS:
+   By specifying only one set of coordinates (raA, decA), matches are found
+   within that list, but avoiding duplicate matches (i.e., matching 1 to 2
+   and then 2 to 1) and avoiding matching an object with itself (i.e.,
+   matching 1 to 1).  If you wish to include self-matches and duplicates,
+   then call with raB=raA and decB=decA.
+
+ PROCEDURES CALLED:
+   djs_diff_angle()
+
+ INTERNAL PROCEDURES:
+   djs_angle_1match()
+   djs_angle_2match()
+
+ REVISION HISTORY:
+   27-May-1997  Written by David Schlegel, Durham
+   24-Feb-1999  Converted to IDL 5 (DJS)
+   05-Mar-1999  Made the internal routines for more efficient matching
+                within the same coordinate list without duplicates, e.g.
+                by only specifying raA, decA and not raB, decB.
+   Jan. 2014    Converted from IDL to Python by D. Jones
+
+"""
 
 import numpy as np
 import exceptions
@@ -89,8 +85,8 @@ def djs_angle_2match(raA, decA,
                      raB, decB, 
                      dtheta,
                      mmax=1, 
-                     units='degrees'):
-
+                     units='degrees',
+                     mdist=False):
 
    if units == "hrdeg":
       convRA = np.pi / 12.0
@@ -178,19 +174,27 @@ def djs_angle_2match(raA, decA,
    junk = np.where(mcount > 0)[0]
    ntot = len(junk)
 
-   return(ntot,mindx,mcount)
+   if mdist:
+      return(ntot,mindx,mcount,mdist)
+   else:
+      return(ntot,mindx,mcount)
 
 #------------------------------------------------------------------------------
 def djs_angle_match(raA, decA, raB, decB, 
                     dtheta, 
-                    mmax=1, 
-                    units='degrees'):
+                    mmax = 1,
+                    units = 'degrees',
+                    mdist = False):
    print('djs!')
    # Call with different RA,DEC
-   ntot,mindx,mcount = djs_angle_2match( raA, decA, raB, decB, dtheta,
-                                         mmax=mmax, units=units)
-
-   return(ntot,mindx,mcount)
+   if mdist:
+      ntot,mindx,mcount,mdist = djs_angle_2match( raA, decA, raB, decB, dtheta,
+                                                  mmax=mmax, units=units,mdist=mdist)
+      return(ntot,mindx,mcount,mdist)
+   else:
+      ntot,mindx,mcount = djs_angle_2match( raA, decA, raB, decB, dtheta,
+                                            mmax=mmax, units=units,mdist=mdist)
+      return(ntot,mindx,mcount)
 
 #------------------------------------------------------------------------------
 def djs_diff_angle(ra1, dec1, 

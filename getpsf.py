@@ -1,27 +1,7 @@
 #!/usr/bin/env python
 #D. Jones - 1/14/14
-"""This code is from the IDL Astronomy Users Library
+"""This code is from the IDL Astronomy Users Library"""
 
-example call:
-
-import getpsf
-import aper
-import numpy as np
-# load FITS image and specify PSF star coordinates
-image = pyfits.getdata(fits_filename)
-xpos,ypos = np.array([1450,1400]),np.array([1550,1600])
-
-# run aper to get mags and sky values for specified coords
-mag,magerr,flux,fluxerr,sky,skyerr,badflag,outstr = \
-         aper.aper(image,xpos,ypos,phpadu=1,apr=5,zeropoint=25,
-         skyrad=[40,50],badpix=[-12000,60000],exact=True)
-
-# use the stars at those coords to generate a PSF model
-gauss,psf,psfmag = \
-    getpsf.getpsf(image,xpos,ypos,
-                  mag,sky,1,1,np.arange(len(xpos)),
-                  5,'output_psf.fits')
-"""
 
 import numpy as np
 import daoerf, rinter, pkfit, pkfit_noise
@@ -39,91 +19,104 @@ def getpsf(image,xc,yc,
            phpadu,idpsf,psfrad,
            fitrad,psfname, 
            debug = False):
-    """;+
-    ; NAME:
-    ;	GETPSF
-    ; PURPOSE:
-    ;	To generate a point-spread function (PSF) from observed stars. 
-    ; EXPLANATION:
-    ;	The PSF is represented as a 2-dimensional Gaussian
-    ;	(integrated over each pixel) and a lookup table of residuals.
-    ;	The lookup table and Gaussian parameters are output in a FITS
-    ;	image file.   The PSF FITS file created by GETPSF can be
-    ;	read with the procedure RDPSF.      Adapted from the 1986 STSDAS 
-    ;	version of DAOPHOT
-    ;
-    ; CALLING SEQUENCE:
-    ;	GETPSF, image, xc, yc, apmag, sky, [ronois, phpadu, gauss, psf, 
-    ;			idpsf, psfrad, fitrad, psfname, /DEBUG ]
-    ;
-    ; INPUTS:
-    ;	IMAGE  - input image array
-    ;	XC     - input vector of x coordinates (from FIND), these should be
-    ;		IDL (first pixel is (0,0)) convention.
-    ;	YC     - input vector of y coordinates (from FIND)
-    ;	APMAG  - vector of magnitudes (from APER), used for initial estimate
-    ;		of gaussian intensity.  If APMAG is multidimensional, (more
-    ;		than 1 aperture was used in APER) then the first aperture
-    ;		is used.
-    ;	SKY    - vector of sky values (from APER)                
-    ;
-    ; OPTIONAL INPUTS:
-    ;	The user will be prompted for the following parameters if not supplied.
-    ;
-    ;	RONOIS - readout noise per pixel, (in electrons, or equivalent photons)
-    ;	PHPADU - photons per analog digital unit, used to scale the data
-    ;		numbers in IMAGE into photon units
-    ;	IDPSF  - subscripts of the list of stars created by 
-    ;		APER which will be used to define the PSF.   Stars whose
-    ;		centroid does not fall within PSFRAD of the edge of the frame,
-    ;		or for which a Gaussian fit requires more than 25 iterations,
-    ;		will be ignored when creating the final PSF.
-    ;	PSFRAD - the scalar radius, in pixels, of the circular area within
-    ;		which the PSF will be defined.   This should be slightly larger
-    ;		than the radius of the brightest star that one will be
-    ;		interested in.
-    ;	FITRAD - the scalar radius, in pixels of the circular area used in the
-    ;		least-square star fits.  Stetson suggest that FITRAD should
-    ;		approximately equal to the FWHM, slightly less for crowded
-    ;		fields.  (FITRAD must be smaller than PSFRAD.)
-    ;	PSFNAME- Name of the FITS file that will contain the table of residuals,
-    ;		and the best-fit Gaussian parameters.    This file is 
-    ;		subsequently required for use by NSTAR.  
-    ;
-    ; OPTIONAL OUTPUTS:
-    ;	GAUSS  - 5 element vector giving parameters of gaussian fit to the 
-    ;		first PSF star
-    ;		GAUSS(0) - height of the gaussian (above sky)
-    ;		GAUSS(1) - the offset (in pixels) of the best fitting gaussian
-    ;			and the original X centroid
-    ;		GAUSS(2) - similiar offset from the Y centroid 
-    ;		GAUSS(3) - Gaussian sigma in X
-    ;		GAUSS(4) - Gaussian sigma in Y
-    ;	PSF    - 2-d array of PSF residuals after a Gaussian fit.
-    ;
-    ; PROCEDURE:
-    ;	GETPSF fits a Gaussian profile to the core of the first PSF star 
-    ;	and generates a look-up table of the residuals of the
-    ;	actual image data from the Gaussian fit.  If desired, it will then
-    ;	fit this PSF to another star (using PKFIT) to determine its precise 
-    ;	centroid, scale the same Gaussian to the new star's core, and add the
-    ;	differences between the actual data and the scaled Gaussian to the
-    ;	table of residuals.   (In other words, the Gaussian fit is performed
-    ;	only on the first star.)
-    ;
-    ; OPTIONAL KEYWORD INPUT:
-    ;	DEBUG - if this keyword is set and non-zero, then the result of each
-    ;		fitting iteration will be displayed.
-    ;
-    ; PROCEDURES CALLED
-    ;	DAOERF, MAKE_2D, MKHDR, RINTER(), PKFIT, STRNUMBER(), STRN(), WRITEFITS
-    ;
-    ; REVISON HISTORY:
-    ;	Adapted from the 1986 version of DAOPHOT in STSDAS
-    ;	IDL Version 2  W Landsman           November 1988
-    ;	Use DEBUG keyword instead of !DEBUG  W. Landsman       May 1996
-    ;	Converted to IDL V5.0   W. Landsman   September 1997
-    ;-       
+    """Generates a point-spread function (PSF) from observed stars. 
+
+    The PSF is represented as a 2-dimensional Gaussian
+    (integrated over each pixel) and a lookup table of residuals.
+    The lookup table and Gaussian parameters are output in a FITS
+    image file.   The PSF FITS file created by GETPSF can be
+    read with the procedure RDPSF.      Adapted from the 1986 STSDAS 
+    version of DAOPHOT
+    
+    CALLING SEQUENCE:
+    	 gauss,psf,psfmag = getpsf.getpsf( image, xc, yc, apmag, sky, ronois, phpadu,
+    		 	                   idpsf, psfrad, fitrad, psfname)
+
+
+    EXAMPLE:
+
+         import getpsf
+         import aper
+         import numpy as np
+         # load FITS image and specify PSF star coordinates
+         image = pyfits.getdata(fits_filename)
+         xpos,ypos = np.array([1450,1400]),np.array([1550,1600])
+
+         # run aper to get mags and sky values for specified coords
+         mag,magerr,flux,fluxerr,sky,skyerr,badflag,outstr = \
+                aper.aper(image,xpos,ypos,phpadu=1,apr=5,zeropoint=25,
+                skyrad=[40,50],badpix=[-12000,60000],exact=True)
+
+         # use the stars at those coords to generate a PSF model
+         gauss,psf,psfmag = \
+                getpsf.getpsf(image,xpos,ypos,
+                              mag,sky,1,1,np.arange(len(xpos)),
+                              5,'output_psf.fits')
+    
+    INPUTS:
+         image   - input image array
+    	 xc      - input vector of x coordinates (from FIND), these should be
+    		    IDL (first pixel is (0,0)) convention.
+    	 yc      - input vector of y coordinates (from FIND)
+    	 apmag   - vector of magnitudes (from APER), used for initial estimate
+    		    of gaussian intensity.  If apmag is multidimensional, (more
+    		    than 1 aperture was used in APER) then the first aperture
+    		    is used.
+    	 sky     - vector of sky values (from APER)                    
+    	 ronois  - readout noise per pixel, (in electrons, or equivalent photons)
+    	 phpadu  - photons per analog digital unit, used to scale the data
+    		    numbers in IMAGE into photon units
+    	 idpsf   - subscripts of the list of stars created by 
+    		    APER which will be used to define the PSF.  Stars whose
+                    centroid does not fall within psfrad of the edge of the frame,
+                    or for which a Gaussian fit requires more than 25 iterations,
+    		    will be ignored when creating the final PSF.
+    	 psfrad  - the scalar radius, in pixels, of the circular area within
+    		    which the PSF will be defined.  This should be slightly larger
+    		    than the radius of the brightest star that one will be
+    		    interested in.
+    	 fitrad  - the scalar radius, in pixels of the circular area used in the
+    		    least-square star fits.  Stetson suggest that fitrad should
+    		    approximately equal to the FWHM, slightly less for crowded
+                    fields.  (fitrad must be smaller than psfrad.)
+    	 psfname - Name of the FITS file that will contain the table of residuals,
+    		    and the best-fit Gaussian parameters.  This file is 
+    		    subsequently required for use by NSTAR or PKFIT.
+
+     OPTIONAL KEYWORD INPUT:
+          debug    - if this keyword is True, then the result of each
+    		      fitting iteration will be displayed.
+    
+     RETURNS:
+    	  gauss  - 5 element vector giving parameters of gaussian fit to the 
+                    first PSF star
+    		 gauss[0] - height of the gaussian (above sky)
+    		 gauss[1] - the offset (in pixels) of the best fitting gaussian
+    			     and the original X centroid
+    		 gauss[2] - similiar offset from the Y centroid 
+    		 gauss[3] - Gaussian sigma in X
+    		 gauss[4] - Gaussian sigma in Y
+    	  psf    - 2-d array of PSF residuals after a Gaussian fit.
+    
+     PROCEDURE:
+          GETPSF fits a Gaussian profile to the core of the first PSF star 
+    	  and generates a look-up table of the residuals of the
+    	  actual image data from the Gaussian fit.  If desired, it will then
+    	  fit this PSF to another star (using PKFIT) to determine its precise 
+    	  centroid, scale the same Gaussian to the new star's core, and add the
+    	  differences between the actual data and the scaled Gaussian to the
+    	  table of residuals.  (In other words, the Gaussian fit is performed
+    	  only on the first star.)
+        
+     PROCEDURES CALLED:
+          DAOERF, MAKE_2D, RINTER(), PKFIT
+    
+     REVISON HISTORY:
+    	Adapted from the 1986 version of DAOPHOT in STSDAS
+    	IDL Version 2                                             W Landsman     November 1988
+    	Use DEBUG keyword instead of !DEBUG                       W. Landsman    May 1996
+    	Converted to IDL V5.0                                     W. Landsman    September 1997
+        Converted to Python                                       D. Jones       January, 2014
     """
 
     s = np.shape(image)    		#Get number of rows and columns in image

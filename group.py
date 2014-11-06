@@ -7,50 +7,43 @@ from numpy import where,append,array
 import exceptions
 
 def group( x, y, rcrit):
-    """IDL documentation:
-    ;+
-    ; NAME:
-    ;      GROUP
-    ; PURPOSE:
-    ;      Assign stars with non-overlapping PSF profiles into distinct groups
-    ; EXPLANATION:
-    ;      Part of the IDL-DAOPHOT sequence
-    ;
-    ; CALLING SEQUENCE:
-    ;      GROUP, X, Y, RCRIT, NGROUP
-    ;
-    ; INPUTS:
-    ;      X - vector, giving X coordinates of a set of stars.
-    ;      Y - vector, giving Y coordinates of a set of stars.
-    ;           If X and Y are input as integers, then they will be converted to 
-    ;           floating point
-    ;      RCRIT - scalar, giving minimum distance between stars of two
-    ;               distinct groups.  Stars less than this distance from
-    ;               each other are always in the same group.    Stetson suggests
-    ;               setting the critical distance equal to the PSF radius +
-    ;               the Fitting radius.
-    ;
-    ; OUTPUTS:
-    ;      NGROUP - integer vector, same number of elements as X and Y,
-    ;               giving a group number for each star position.  Group
-    ;               numbering begins with 0.
-    ;
-    ; METHOD:
-    ;      Each position is initially given a unique group number.  The distance
-    ;      of each star is computed against every other star.   Those distances
-    ;      less than RCRIT are assigned the minimum group number of the set.   A
-    ;      check is then made to see if any groups have merged together.
-    ;
-    ; PROCEDURES USED:
-    ;      REM_DUP()
-    ;
-    ; REVISION HISTORY:
-    ;      Written W. Landsman  STX                  April, 1988
-    ;      Major revision to properly merge groups together  W. Landsman   Sep 1991
-    ;      Work for more than 32767 points    W. Landsman  March 1997
-    ;      Converted to IDL V5.0   W. Landsman   September 1997
-    ;      Avoid overflow if X and Y are integers      W. Landsman  Feb. 1999   
-    ;-"""
+    """Assign stars with non-overlapping PSF profiles into distinct groups
+    (adapted for IDL from DAOPHOT, then translated from IDL to Python).
+
+    Part of the IDL-DAOPHOT sequence
+
+    CALLING SEQUENCE:
+         ngroup = group.group(X, Y, rcrit)
+
+    INPUTS:
+          x    -  vector, giving X coordinates of a set of stars.
+          y    -  vector, giving Y coordinates of a set of stars.
+                   If X and Y are input as integers, then they will be converted to 
+                   floating point
+          rcrit - scalar, giving minimum distance between stars of two
+                   distinct groups.  Stars less than this distance from
+                   each other are always in the same group.    Stetson suggests
+                   setting the critical distance equal to the PSF radius +
+                   the Fitting radius.
+
+    RETURNS:
+          ngroup - integer vector, same number of elements as X and Y,
+                    giving a group number for each star position.  Group
+                    numbering begins with 0.
+
+    METHOD:
+          Each position is initially given a unique group number.  The distance
+          of each star is computed against every other star.   Those distances
+          less than RCRIT are assigned the minimum group number of the set.   A
+          check is then made to see if any groups have merged together.
+    
+    REVISION HISTORY:
+          Written                                             W. Landsman  STX                  April,     1988
+          Major revision to properly merge groups together    W. Landsman                       September, 1991
+          Work for more than 32767 points                     W. Landsman                       March,     1997
+          Converted to IDL V5.0                               W. Landsman                       September, 1997
+          Avoid overflow if X and Y are integers              W. Landsman                       February,  1999   
+    """
 
     
     rcrit2 = rcrit**2.                            #Don't bother taking square roots

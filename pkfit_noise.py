@@ -1,63 +1,108 @@
 #!/usr/bin/env python
 # D. Jones - 1/10/14
-"""This code is from the IDL Astronomy Users Library 
-with modifications from Dan Scolnic.  Original doc:
-;+
-; NAME:
-;       PKFIT
-; PURPOSE:
-;       Subroutine of  GETPSF to perform a one-star least-squares fit
-; EXPLANATION:
-;       Part of the DAOPHOT PSF photometry sequence
-;
-; CALLING SEQUENCE:
-;       PKFIT, f, scale, x, y, sky, radius, ronois, phpadu, gauss, psf,
-;                               errmag, chi, sharp, Niter, /DEBUG
-; INPUTS:
-;       F      - NX by NY array containing actual picture data.
-;       X, Y   - the initial estimates of the centroid of the star relative
-;               to the corner (0,0) of the subarray.  Upon return, the
-;               final computed values of X and Y will be passed back to the
-;               calling routine.
-;       SKY  -   the local sky brightness value, as obtained from APER
-;       RADIUS-  the fitting radius-- only pixels within RADIUS of the
-;               instantaneous estimate of the star's centroid will be
-;               included in the fit, scalar
-;       RONOIS - readout noise per pixel, scalar
-;       PHPADU - photons per analog digital unit, scalar
-;       GAUSS -  vector containing the values of the five parameters defining
-;               the analytic Gaussian which approximates the core of the PSF.
-;       PSF   -  an NPSF by NPSF look-up table containing corrections from
-;               the Gaussian approximation of the PSF to the true PSF.
-;
-; INPUT-OUTPUT:
-;       SCALE  - the initial estimate of the brightness of the star,
-;               expressed as a fraction of the brightness of the PSF.
-;               Upon return, the final computed value of SCALE will be
-;               passed back to the calling routine.
-; OUTPUTS:
-;       ERRMAG - the estimated standard error of the value of SCALE
-;               returned by this routine.
-;       CHI    - the estimated goodness-of-fit statistic:  the ratio
-;               of the observed pixel-to-pixel mean absolute deviation from
-;               the profile fit, to the value expected on the basis of the
-;               noise as determined from Poisson statistics and the
-;               readout noise.
-;       SHARP  - a goodness-of-fit statistic describing how much broader
-;               the actual profile of the object appears than the
-;               profile of the PSF.
-;       NITER -  the number of iterations the solution required to achieve
-;               convergence.  If NITER = 25, the solution did not converge.
-;               If for some reason a singular matrix occurs during the least-
-;               squares solution, this will be flagged by setting NITER = -1.
-;
-; RESTRICTIONS:
-;       No parameter checking is performed
-; REVISON HISTORY:
-;       Adapted from the official DAO version of 1985 January 25
-;       Version 2.0 W. Landsman STX             November 1988
-;       Converted to IDL V5.0   W. Landsman   September 1997
-;-"""
+"""This code is from the IDL Astronomy Users Library with
+modifications from Dan Scolnic.
+(adapted for IDL from DAOPHOT, then translated from IDL to Python).
+
+Subroutine of GETPSF to perform a one-star least-squares fit, 
+part of the DAOPHOT PSF photometry sequence.  This version requires
+input noise and mask images.
+
+CALLING SEQUENCE:
+     import pkfit
+     pk = pkfit.pkfit_class(f, gauss, psf,
+                            ronois, phpadu, noise_image, mask_image )
+     errmag,chi,sharp,niter,scale,xnew,ynew = pk.pkfit(scale,x,y,sky,radius)
+
+PKFIT CLASS INPUTS:
+     f           - NX by NY array containing actual picture data.
+     ronois      - readout noise per pixel, scalar
+     phpadu      - photons per analog digital unit, scalar
+     gauss       - vector containing the values of the five parameters defining
+                    the analytic Gaussian which approximates the core of the PSF.
+     psf         - an NPSF by NPSF look-up table containing corrections from
+                    the Gaussian approximation of the PSF to the true PSF.
+     noise_image - the noise image corresponding to f
+     mask_image  - the mask image corresponding to f.  Masked pixels are not used.
+
+PKFIT FUNCTION INPUTS:
+     x, y    - the initial estimates of the centroid of the star relative
+                to the corner (0,0) of the subarray.  Upon return, the
+                final computed values of X and Y will be passed back to the
+                calling routine.
+     sky     - the local sky brightness value, as obtained from APER
+     radius  - the fitting radius-- only pixels within RADIUS of the
+                instantaneous estimate of the star's centroid will be
+                included in the fit, scalar
+
+OPTIONAL PKFIT FUNCTION INPUTS:
+     xyout   - if True, return new x and y positions
+     maxiter - maximum iterations (default = 25)
+
+INPUT-OUTPUT:
+     scale  - the initial estimate of the brightness of the star,
+               expressed as a fraction of the brightness of the PSF.
+               Upon return, the final computed value of SCALE will be
+               passed back to the calling routine.
+
+RETURNS:
+     errmag - the estimated standard error of the value of SCALE
+               returned by this routine.
+     chi    - the estimated goodness-of-fit statistic:  the ratio
+               of the observed pixel-to-pixel mean absolute deviation from
+               the profile fit, to the value expected on the basis of the
+               noise as determined from Poisson statistics and the
+               readout noise.
+     sharp  - a goodness-of-fit statistic describing how much broader
+               the actual profile of the object appears than the
+               profile of the PSF.
+     niter  - the number of iterations the solution required to achieve
+               convergence.  If NITER = 25, the solution did not converge.
+               If for some reason a singular matrix occurs during the least-
+               squares solution, this will be flagged by setting NITER = -1.
+
+EXAMPLE:
+     import pyfits
+     import pkfit_noise as pkfit
+
+     # read in the FITS images
+     image = pyfits.getdata(fits_filename)
+     noiseim = pyfits.getdata(fits_noise_filename)
+     maskim = pyfits.getdata(fits__mask_filename)
+
+     # read in the PSF image
+     psf = pyfits.getdata(psf_filename)
+     hpsf = pyfits.getheader(psf_filename)
+     gauss = [hpsf['GAUSS1'],hpsf['GAUSS2'],hpsf['GAUSS3'],hpsf['GAUSS4'],hpsf['GAUSS5']]
+
+     # x and y points for PSF fitting
+     xpos,ypos = np.array([1450,1400]),np.array([1550,1600])
+
+     # run 'aper' on x,y coords to get sky values
+     mag,magerr,flux,fluxerr,sky,skyerr,badflag,outstr = \
+              aper.aper(image,xpos,ypos,phpadu=1,apr=5,zeropoint=25,
+              skyrad=[40,50],badpix=[-12000,60000],exact=True)
+
+     # load the pkfit class
+     pk = pkfit.pkfit_class(image,gauss,psf,1,1,noiseim,maskim)
+
+     # do the PSF fitting
+     for x,y,s in zip(xpos,ypos,sky):
+          errmag,chi,sharp,niter,scale = \
+              pk.pkfit_norecent_noise(1,x,y,s,5)
+          flux = scale*10**(0.4*(25.-hpsf['PSFMAG']))
+          dflux = errmag*10**(0.4*(25.-hpsf['PSFMAG']))
+          print('PSF fit to coords %.2f,%.2f gives flux %s +/- %s'%(x,y,flux,dflux))
+               
+RESTRICTIONS:
+     No parameter checking is performed
+
+REVISON HISTORY:
+     Adapted from the official DAO version of 1985 January 25
+     Version 2.0                              W. Landsman STX             November,  1988
+     Converted to IDL V5.0                    W. Landsman                 September, 1997
+     Converted to Python                      D. Jones                    January,   2014
+"""
 import numpy as np
 from numpy import sqrt
 from scipy import linalg

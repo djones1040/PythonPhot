@@ -6,60 +6,44 @@ where,abs,sqrt,greater,less_equal,less,greater_equal = \
     np.where,np.abs,np.sqrt,np.greater,np.less_equal,np.less,np.greater_equal
 
 def Pixwt(xc, yc, r, x, y):
-    """; ---------------------------------------------------------------------------
-    ; FUNCTION Pixwt( xc, yc, r, x, y )
-    ;+
-    ; NAME:
-    ;	PIXWT
-    ; PURPOSE: 
-    ;	Circle-rectangle overlap area computation.
-    ; DESCRIPTION:
-    ;	Compute the fraction of a unit pixel that is interior to a circle.
-    ;	The circle has a radius r and is centered at (xc, yc).  The center of
-    ;	the unit pixel (length of sides = 1) is at (x, y).
-    ;
-    ; CATEGORY:
-    ;	CCD data processing
-    ; CALLING SEQUENCE:
-    ;	area = Pixwt( xc, yc, r, x, y )
-    ; INPUTS:
-    ;	xc, yc : Center of the circle, numeric scalars
-    ;	r      : Radius of the circle, numeric scalars
-    ;	x, y   : Center of the unit pixel, numeric scalar or vector
-    ; OPTIONAL INPUT PARAMETERS:
-    ;	None.
-    ; KEYWORD PARAMETERS:
-    ;	None.
-    ; OUTPUTS:
-    ;	Function value: Computed overlap area.
-    ; EXAMPLE:
-    ;       What is the area of overlap of a circle with radius 3.44 units centered
-    ;       on the point 3.23, 4.22 with the pixel centered at [5,7]
-    ;
-    ;       IDL> print,pixwt(3.23,4.22,3.44,5,7)  ==>  0.6502
-    ; COMMON BLOCKS:
-    ;    None.
-    ; PROCEDURE:
-    ;	Divides the circle and rectangle into a series of sectors and
-    ;	triangles.  Determines which of nine possible cases for the
-    ;	overlap applies and sums the areas of the corresponding sectors
-    ;	and triangles.    Called by aper.pro
-    ;
-    ; NOTES:
-    ;      If improved speed is needed then a C version of this routines, with
-    ;      notes on how to linkimage it to IDL is available at   
-    ;       ftp://ftp.lowell.edu/pub/buie/idl/custom/
-    ;
-    ; MODIFICATION HISTORY:
-    ;     Ported by Doug Loucks, Lowell Observatory, 1992 Sep, from the
-    ;    routine pixwt.c, by Marc Buie.
-    ;-
-    ; ---------------------------------------------------------------------------
-    ;
-    ; Compute the fraction of a unit pixel that is interior to a circle.
-    ; The circle has a radius r and is centered at (xc, yc).  The center of
-    ; the unit pixel (length of sides = 1) is at (x, y).
-    ; ---------------------------------------------------------------------------
+    """Circle-rectangle overlap area computation.
+
+    Compute the fraction of a unit pixel that is interior to a circle.
+    The circle has a radius r and is centered at (xc, yc).  The center of
+    the unit pixel (length of sides = 1) is at (x, y).
+    
+    area = pixwt.Pixwt( xc, yc, r, x, y )
+
+    INPUT PARAMETERS:
+         xc, yc - Center of the circle, numeric scalars
+    	 r      - Radius of the circle, numeric scalars
+    	 x, y   - Center of the unit pixel, numeric scalar or vector
+
+    RETURNS:
+         Function value: Computed overlap area.
+
+    EXAMPLE:
+         What is the area of overlap of a circle with radius 3.44 units centered
+         on the point 3.23, 4.22 with the pixel centered at [5,7]
+    
+         import pixwt
+         pixwt.Pixwt(3.23,4.22,3.44,5,7)  ==>  0.6502
+
+    PROCEDURE:
+         Divides the circle and rectangle into a series of sectors and
+    	 triangles.  Determines which of nine possible cases for the
+    	 overlap applies and sums the areas of the corresponding sectors
+    	 and triangles.  Called by aper.pro
+    
+    NOTES:
+         If improved speed is needed then a C version of this routines, with
+         notes on how to linkimage it to IDL is available at   
+         ftp://ftp.lowell.edu/pub/buie/idl/custom/
+    
+    MODIFICATION HISTORY:
+         Ported by Doug Loucks, Lowell Observatory, 1992 Sep, from the
+         routine pixwt.c, by Marc Buie.
+         converted to Python by D. Jones
     """
     return Intarea( xc, yc, r, x-0.5, x+0.5, y-0.5, y+0.5 )
 

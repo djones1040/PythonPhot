@@ -11,103 +11,97 @@ def mmm( sky_vector,
          nsky = False,
          integer = "discrete",
          mxiter = 50,
-         silent = False,
          minsky = 20,
          nan=True):
-    """;+
-    ; NAME:
-    ;       MMM
-    ; PURPOSE: 
-    ;       Estimate the sky background in a stellar contaminated field.
-    ; EXPLANATION:  
-    ;       MMM assumes that contaminated sky pixel values overwhelmingly display 
-    ;       POSITIVE departures from the true value.  Adapted from DAOPHOT 
-    ;       routine of the same name.
-    ;
-    ; CALLING SEQUENCE:
-    ;       MMM, sky, [ skymod, sigma, skew, HIGHBAD = , READNOISE=, /DEBUG, 
-    ;                  MINSKY=, NSKY=, /INTEGER,/SILENT]
-    ;
-    ; INPUTS:
-    ;       SKY - Array or Vector containing sky values.  This version of
-    ;               MMM does not require SKY to be sorted beforehand.  SKY
-    ;               is unaltered by this program.
-    ;
-    ; OPTIONAL OUTPUTS:
-    ;       skymod - Scalar giving estimated mode of the sky values
-    ;       SIGMA -  Scalar giving standard deviation of the peak in the sky
-    ;               histogram.  If for some reason it is impossible to derive
-    ;               skymod, then SIGMA = -1.0
-    ;       SKEW -   Scalar giving skewness of the peak in the sky histogram
-    ;
-    ;               If no output variables are supplied or if /DEBUG is set
-    ;               then the values of skymod, SIGMA and SKEW will be printed.
-    ;
-    ; OPTIONAL KEYWORD INPUTS:
-    ;       HIGHBAD - scalar value of the (lowest) "bad" pixel level (e.g. cosmic 
-    ;                rays or saturated pixels) If not supplied, then there is 
-    ;                assumed to be no high bad pixels.
-    ;       MINSKY - Integer giving mininum number of sky values to be used.   MMM
-    ;                will return an error if fewer sky elements are supplied.
-    ;                Default = 20.
-    ;       MAXITER - integer giving maximum number of iterations allowed,default=50
-    ;       READNOISE - Scalar giving the read noise (or minimum noise for any 
-    ;                pixel).     Normally, MMM determines the (robust) median by 
-    ;                averaging the central 20% of the sky values.     In some cases
-    ;                where the noise is low, and pixel values are quantized a
-    ;                larger fraction may be needed.    By supplying the optional
-    ;                read noise parameter, MMM is better able to adjust the
-    ;                fraction of pixels used to determine the median.                
-    ;       /INTEGER - Set this keyword if the  input SKY vector only contains
-    ;                discrete integer values.    This keyword is only needed if the
-    ;                SKY vector is of type float or double precision, but contains 
-    ;                only discrete integer values.     (Prior to July 2004, the
-    ;                equivalent of /INTEGER was set for all data types)
-    ;       /DEBUG - If this keyword is set and non-zero, then additional 
-    ;               information is displayed at the terminal.
-    ;       /SILENT - If set, then error messages will be suppressed when MMM
-    ;                cannot compute a background.    Sigma will still be set to -1
-    ; OPTIONAL OUTPUT KEYWORD:
-    ;      NSKY - Integer scalar giving the number of pixels actually used for the
-    ;             sky computation (after outliers have been removed).
-    ; NOTES:
-    ;       (1) Program assumes that low "bad" pixels (e.g. bad CCD columns) have
-    ;       already been deleted from the SKY vector.
-    ;       (2) MMM was updated in June 2004 to better match more recent versions
-    ;       of DAOPHOT.
-    ;       (3) Does not work well in the limit of low Poisson integer counts
-    ;       (4) MMM may fail for strongly skewed distributions.
-    ; METHOD:
-    ;       The algorithm used by MMM consists of roughly two parts:
-    ;       (1) The average and sigma of the sky pixels is computed.   These values
-    ;       are used to eliminate outliers, i.e. values with a low probability
-    ;       given a Gaussian with specified average and sigma.   The average
-    ;       and sigma are then recomputed and the process repeated up to 20
-    ;       iterations:
-    ;       (2) The amount of contamination by stars is estimated by comparing the 
-    ;       mean and median of the remaining sky pixels.   If the mean is larger
-    ;       than the median then the true sky value is estimated by
-    ;       3*median - 2*mean
-    ;         
-    ; REVISION HISTORY:
-    ;       Adapted to IDL from 1986 version of DAOPHOT in STSDAS, 
-    ;       W. Landsman, STX Feb 1987
-    ;       Added HIGHBAD keyword, W. Landsman January, 1991
-    ;       Fixed occasional problem with integer inputs    W. Landsman  Feb, 1994
-    ;       Avoid possible 16 bit integer overflow   W. Landsman  November 2001
-    ;       Added READNOISE, NSKY keywords,  new median computation   
-    ;                          W. Landsman   June 2004
-    ;       Added INTEGER keyword W. Landsman July 2004
-    ;       Improve numerical precision  W. Landsman  October 2004
-    ;       Fewer aborts on strange input sky histograms W. Landsman October 2005
-    ;       Added /SILENT keyword  November 2005
-    ;       Fix too many /CON keywords to MESSAGE  W.L. December 2005
-    ;       Fix bug introduced June 2004 removing outliers when READNOISE not set
-    ;         N. Cunningham/W. Landsman  January 2006
-    ;       Make sure that MESSAGE never aborts  W. Landsman   January 2008
-    ;       Add mxiter keyword and change default to 50  W. Landsman August 2011
-    ;       Added MINSKY keyword W.L. December 2011
-    ;-"""
+    """Estimate the sky background in a stellar contaminated field.
+
+    MMM assumes that contaminated sky pixel values overwhelmingly display 
+    POSITIVE departures from the true value.  Adapted from DAOPHOT 
+    routine of the same name.
+    
+    CALLING SEQUENCE:
+         skymod,sigma,skew = mmm.mmm( sky, highbad= , readnoise=, debug=, 
+                                      minsky=, nsky=, integer=)
+    
+    INPUTS:
+         sky - Array or Vector containing sky values.  This version of
+                MMM does not require SKY to be sorted beforehand.
+    
+    RETURNS:
+         skymod - Scalar giving estimated mode of the sky values
+         sigma -  Scalar giving standard deviation of the peak in the sky
+                   histogram.  If for some reason it is impossible to derive
+                   skymod, then SIGMA = -1.0
+         skew -   Scalar giving skewness of the peak in the sky histogram
+    
+         If no output variables are supplied or if "debug" is set
+         then the values of skymod, sigma and skew will be printed.
+    
+    OPTIONAL KEYWORD INPUTS:
+         highbad - scalar value of the (lowest) "bad" pixel level (e.g. cosmic 
+                    rays or saturated pixels) If not supplied, then there is 
+                    assumed to be no high bad pixels.
+         minsky - Integer giving mininum number of sky values to be used.   MMM
+                    will return an error if fewer sky elements are supplied.
+                    Default = 20.
+         maxiter - integer giving maximum number of iterations allowed,default=50
+         readnoise - Scalar giving the read noise (or minimum noise for any 
+                     pixel).  Normally, MMM determines the (robust) median by 
+                    averaging the central 20% of the sky values.  In some cases
+                    where the noise is low, and pixel values are quantized a
+                    larger fraction may be needed.  By supplying the optional
+                    read noise parameter, MMM is better able to adjust the
+                    fraction of pixels used to determine the median.                
+         integer - Set this keyword if the  input SKY vector only contains
+                    discrete integer values.  This keyword is only needed if the
+                    SKY vector is of type float or double precision, but contains 
+                    only discrete integer values.  (Prior to July 2004, the
+                    equivalent of /INTEGER was set for all data types)
+         debug -   If this keyword is set and non-zero, then additional 
+                    information is displayed at the terminal.
+
+    OPTIONAL OUTPUT KEYWORD:
+         nsky - Integer scalar giving the number of pixels actually used for the
+                 sky computation (after outliers have been removed).
+
+    NOTES:
+         (1) Program assumes that low "bad" pixels (e.g. bad CCD columns) have
+              already been deleted from the SKY vector.
+         (2) MMM was updated in June 2004 to better match more recent versions
+              of DAOPHOT.
+         (3) Does not work well in the limit of low Poisson integer counts
+         (4) MMM may fail for strongly skewed distributions.
+
+    METHOD:
+         The algorithm used by MMM consists of roughly two parts:
+           (1) The average and sigma of the sky pixels is computed.  These values
+                are used to eliminate outliers, i.e. values with a low probability
+                given a Gaussian with specified average and sigma.  The average
+                and sigma are then recomputed and the process repeated up to 20
+                iterations.
+           (2) The amount of contamination by stars is estimated by comparing the 
+                mean and median of the remaining sky pixels.  If the mean is larger
+                than the median then the true sky value is estimated by
+                3*median - 2*mean
+             
+     REVISION HISTORY:
+           Adapted to IDL from 1986 version of DAOPHOT in STSDAS        W. Landsman, STX           Feb,      1987
+           Added HIGHBAD keyword                                        W. Landsman                January,  1991
+           Fixed occasional problem with integer inputs                 W. Landsman                Feb,      1994
+           Avoid possible 16 bit integer overflow                       W. Landsman                November, 2001
+           Added READNOISE, NSKY keywords,  new median computation      W. Landsman                June,     2004
+           Added INTEGER keyword                                        W. Landsman                July,     2004
+           Improve numerical precision                                  W. Landsman                October,  2004
+           Fewer aborts on strange input sky histograms                 W. Landsman                October,  2005
+           Added /SILENT keyword                                                                   November, 2005
+           Fix too many /CON keywords to MESSAGE                        W.L.                       December, 2005
+           Fix bug introduced June 2004 removing outliers               N. Cunningham/W. Landsman  January,  2006
+            when READNOISE not set
+           Make sure that MESSAGE never aborts                          W. Landsman                January,  2008
+           Add mxiter keyword and change default to 50                  W. Landsman                August,   2011
+           Added MINSKY keyword                                         W.L.                       December, 2011
+           Converted to Python                                          D. Jones                   January,  2014
+    """
 
     if nan: sky_vector = sky_vector[np.where(sky_vector == sky_vector)]
     nsky = len( sky_vector )            #Get number of sky elements 

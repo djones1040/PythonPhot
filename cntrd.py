@@ -5,96 +5,89 @@
 import numpy as np
 
 def cntrd(img, x, y,
-          fwhm, silent=False, 
-          debug=False, 
+          fwhm, verbose = True, 
+          debug = False, 
           extendbox = False, 
           keepcenter = False):
+    """Compute the centroid of a star using a derivative search 
+    (adapted for IDL from DAOPHOT, then translated from IDL to Python).
 
-    """;+
-    ;  NAME: 
-    ;       CNTRD
-    ;  PURPOSE:
-    ;       Compute the centroid  of a star using a derivative search 
-    ; EXPLANATION:
-    ;       CNTRD uses an early DAOPHOT "FIND" centroid algorithm by locating the 
-    ;       position where the X and Y derivatives go to zero.   This is usually a 
-    ;       more "robust"  determination than a "center of mass" or fitting a 2d 
-    ;       Gaussian  if the wings in one direction are affected by the presence
-    ;       of a neighboring star.
-    ;
-    ;  CALLING SEQUENCE: 
-    ;       CNTRD, img, x, y, xcen, ycen, [ fwhm , /KEEPCENTER, /SILENT, /DEBUG
-    ;                                       EXTENDBOX = ]
-    ;
-    ;  INPUTS:     
-    ;       IMG - Two dimensional image array
-    ;       X,Y - Scalar or vector integers giving approximate integer stellar 
-    ;             center
-    ;
-    ;  OPTIONAL INPUT:
-    ;       FWHM - floating scalar; Centroid is computed using a box of half
-    ;               width equal to 1.5 sigma = 0.637* FWHM.  CNTRD will prompt
-    ;               for FWHM if not supplied
-    ;
-    ;  OUTPUTS:   
-    ;       XCEN - the computed X centroid position, same number of points as X
-    ;       YCEN - computed Y centroid position, same number of points as Y, 
-    ;              floating point
-    ;
-    ;       Values for XCEN and YCEN will not be computed if the computed
-    ;       centroid falls outside of the box, or if the computed derivatives
-    ;       are non-decreasing.   If the centroid cannot be computed, then a 
-    ;       message is displayed and XCEN and YCEN are set to -1.
-    ;
-    ;  OPTIONAL OUTPUT KEYWORDS:
-    ;       /SILENT - Normally CNTRD prints an error message if it is unable
-    ;               to compute the centroid.   Set /SILENT to suppress this.
-    ;       /DEBUG - If this keyword is set, then CNTRD will display the subarray
-    ;               it is using to compute the centroid.
-    ;       EXTENDBOX = {non-negative positive integer}.   CNTRD searches a box with
-    ;              a half width equal to 1.5 sigma  = 0.637* FWHM to find the 
-    ;              maximum pixel.    To search a larger area, set EXTENDBOX to 
-    ;              the number of pixels to enlarge the half-width of the box.
-    ;              Default is 0; prior to June 2004, the default was EXTENDBOX= 3
-    ;       /KeepCenter = By default, CNTRD finds the maximum pixel in a box 
-    ;              centered on the input X,Y coordinates, and then extracts a new
-    ;              box about this maximum pixel.   Set the /KeepCenter keyword  
-    ;              to skip then step of finding the maximum pixel, and instead use
-    ;              a box centered on the input X,Y coordinates.                          
-    ;  PROCEDURE: 
-    ;       Maximum pixel within distance from input pixel X, Y  determined 
-    ;       from FHWM is found and used as the center of a square, within 
-    ;       which the centroid is computed as the value (XCEN,YCEN) at which 
-    ;       the derivatives of the partial sums of the input image over (y,x)
-    ;       with respect to (x,y) = 0.    In order to minimize contamination from
-    ;       neighboring stars stars, a weighting factor W is defined as unity in 
-    ;       center, 0.5 at end, and linear in between 
-    ;
-    ;  RESTRICTIONS:
-    ;       (1) Does not recognize (bad) pixels.   Use the procedure GCNTRD.PRO
-    ;           in this situation. 
-    ;       (2) DAOPHOT now uses a newer algorithm (implemented in GCNTRD.PRO) in 
-    ;           which centroids are determined by fitting 1-d Gaussians to the 
-    ;           marginal distributions in the X and Y directions.
-    ;       (3) The default behavior of CNTRD changed in June 2004 (from EXTENDBOX=3
-    ;           to EXTENDBOX = 0).
-    ;       (4) Stone (1989, AJ, 97, 1227) concludes that the derivative search
-    ;           algorithm in CNTRD is not as effective (though faster) as a 
-    ;            Gaussian fit (used in GCNTRD.PRO).
-    ;  MODIFICATION HISTORY:
-    ;       Written 2/25/86, by J. K. Hill, S.A.S.C., following
-    ;       algorithm used by P. Stetson in DAOPHOT.
-    ;       Allowed input vectors        G. Hennessy       April,  1992
-    ;       Fixed to prevent wrong answer if floating pt. X & Y supplied
-    ;               W. Landsman        March, 1993
-    ;       Convert byte, integer subimages to float  W. Landsman  May 1995
-    ;       Converted to IDL V5.0   W. Landsman   September 1997
-    ;       Better checking of edge of frame David Hogg October 2000
-    ;       Avoid integer wraparound for unsigned arrays W.Landsman January 2001
-    ;       Handle case where more than 1 pixel has maximum value W.L. July 2002
-    ;       Added /KEEPCENTER, EXTENDBOX (with default = 0) keywords WL June 2004
-    ;       Some errrors were returning X,Y = NaN rather than -1,-1  WL Aug 2010
-    ;-      """
+    CNTRD uses an early DAOPHOT "FIND" centroid algorithm by locating the 
+    position where the X and Y derivatives go to zero.   This is usually a 
+    more "robust"  determination than a "center of mass" or fitting a 2d 
+    Gaussian  if the wings in one direction are affected by the presence
+    of a neighboring star.
+
+    xcen,ycen = cntrd.cntrd(img, x, y, fwhm)
+    
+    REQUIRED INPUTS:
+         img  - Two dimensional image array
+         x,y  - Scalar or vector integers giving approximate integer stellar 
+                 center
+         fwhm - floating scalar; Centroid is computed using a box of half
+                 width equal to 1.5 sigma = 0.637* fwhm.
+
+    OPTIONAL KEYWORD INPUTS:
+         verbose -    Default = True.  If set, CNTRD prints an error message if it 
+                       is unable to compute the centroid.
+         debug -      If this keyword is set, then CNTRD will display the subarray
+                       it is using to compute the centroid.
+         extendbox -  {non-negative positive integer}.   CNTRD searches a box with
+                       a half width equal to 1.5 sigma  = 0.637* FWHM to find the
+                       maximum pixel.    To search a larger area, set extendbox to
+                       the number of pixels to enlarge the half-width of the box.
+                       Default is 0; prior to June 2004, the default was extendbox = 3
+                       keepcenter - By default, CNTRD finds the maximum pixel in a box
+                       centered on the input X,Y coordinates, and then extracts a new
+                       box about this maximum pixel.  Set the keepcenter keyword
+                       to skip then step of finding the maximum pixel, and instead use
+                       a box centered on the input X,Y coordinates.
+
+    RETURNS:
+         xcen - the computed X centroid position, same number of points as X
+         ycen - computed Y centroid position, same number of points as Y, 
+                 floating point
+    
+         Values for xcen and ycen will not be computed if the computed
+         centroid falls outside of the box, or if the computed derivatives
+         are non-decreasing.   If the centroid cannot be computed, then a 
+         message is displayed and xcen and ycen are set to -1.
+    
+    PROCEDURE:
+         Maximum pixel within distance from input pixel X, Y  determined
+         from FHWM is found and used as the center of a square, within
+         which the centroid is computed as the value (XCEN,YCEN) at which
+         the derivatives of the partial sums of the input image over (y,x)
+         with respect to (x,y) = 0.  In order to minimize contamination from
+         neighboring stars stars, a weighting factor W is defined as unity in
+         center, 0.5 at end, and linear in between
+    
+    RESTRICTIONS:
+         (1) Does not recognize (bad) pixels.   Use the procedure GCNTRD.PRO
+              in this situation.
+         (2) DAOPHOT now uses a newer algorithm (implemented in GCNTRD.PRO) in
+              which centroids are determined by fitting 1-d Gaussians to the
+              marginal distributions in the X and Y directions.
+         (3) The default behavior of CNTRD changed in June 2004 (from EXTENDBOX=3
+              to EXTENDBOX = 0).
+         (4) Stone (1989, AJ, 97, 1227) concludes that the derivative search
+              algorithm in CNTRD is not as effective (though faster) as a
+              Gaussian fit (used in GCNTRD.PRO).
+    
+    MODIFICATION HISTORY:
+         Written following algorithm used by P. Stetson in DAOPHOT      J. K. Hill, S.A.S.C.   2/25/86
+         Allowed input vectors                                          G. Hennessy            April,  1992
+         Fixed to prevent wrong answer if floating pt. X & Y supplied   W. Landsman            March, 1993 
+         Convert byte, integer subimages to float                       W. Landsman            May, 1995
+         Converted to IDL V5.0                                          W. Landsman            September, 1997
+         Better checking of edge of frame                               David Hogg             October, 2000
+         Avoid integer wraparound for unsigned arrays                   W.Landsman             January, 2001
+         Handle case where more than 1 pixel has maximum value          W.L.                   July, 2002
+         Added /KEEPCENTER, EXTENDBOX (with default = 0) keywords       WL                     June, 2004
+         Some errrors were returning X,Y = NaN rather than -1,-1        WL                     Aug, 2010
+         Converted to Python                                            D. Jones               January, 2014
+    """
+
     
     sz_image = np.shape(img)
 
@@ -125,7 +118,7 @@ def cntrd(img, x, y,
         if not keepcenter:
             if ( (ix[i] < nhalfbig) or ((ix[i] + nhalfbig) > xsize-1) or \
                      (iy[i] < nhalfbig) or ((iy[i] + nhalfbig) > ysize-1) ):
-                if not silent:
+                if verbose:
                     print('Position '+ pos + ' too near edge of image')
                     xcen[i] = -1   ; ycen[i] = -1
                     continue
@@ -158,7 +151,7 @@ def cntrd(img, x, y,
 
         if ( (xmax < nhalf) or ((xmax + nhalf) > xsize-1) or \
                  (ymax < nhalf) or ((ymax + nhalf) > ysize-1) ):
-            if not silent:
+            if verbose:
                 print('Position '+ pos + ' moved too near edge of image')
                 xcen[i] = -1 ; ycen[i] = -1
                 continue
@@ -190,14 +183,14 @@ def cntrd(img, x, y,
 
         if sumxd >= 0:    # ;Reject if X derivative not decreasing
    
-            if not silent:
+            if not verbose:
                 print('Unable to compute X centroid around position '+ pos)
                 xcen[i]=-1 ; ycen[i]=-1
                 continue
 
         dx = sumxsq*sumd/(sumc*sumxd)
         if ( np.abs(dx) > nhalf ):    #Reject if centroid outside box  
-            if not silent:
+            if verbose:
                 print('Computed X centroid for position '+ pos + ' out of range')
                 xcen[i]=-1 ; ycen[i]=-1 
                 continue
@@ -214,14 +207,14 @@ def cntrd(img, x, y,
         sumxsq = np.sum( w*dd**2 )
 
         if (sumxd >= 0):  #;Reject if Y derivative not decreasing
-            if not silent:
+            if not verbose:
                 print('Unable to compute Y centroid around position '+ pos)
                 xcen[i] = -1 ; ycen[i] = -1
                 continue
 
         dy = sumxsq*sumd/(sumc*sumxd)
         if (np.abs(dy) > nhalf):  #Reject if computed Y centroid outside box
-            if not silent:
+            if verbose:
                 print('Computed X centroid for position '+ pos + ' out of range')
                 xcen[i]=-1 ; ycen[i]=-1
                 continue
