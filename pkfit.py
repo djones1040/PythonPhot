@@ -7,7 +7,7 @@ Subroutine of GETPSF to perform a one-star least-squares fit,
 part of the DAOPHOT PSF photometry sequence.
 
 CALLING SEQUENCE:
-     import pkfit
+     from PyIDLPhot import pkfit
      pk = pkfit.pkfit_class(f, gauss, psf,
                             ronois, phpadu )
      errmag,chi,sharp,niter,scale,xnew,ynew = pk.pkfit(scale,x,y,sky,radius)
@@ -59,7 +59,7 @@ RETURNS:
 
 EXAMPLE:
      import pyfits
-     import pkfit
+     from PyIDLPhot import pkfit
 
      # read in the FITS images
      image = pyfits.getdata(fits_filename)

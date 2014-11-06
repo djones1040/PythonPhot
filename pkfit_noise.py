@@ -9,7 +9,7 @@ part of the DAOPHOT PSF photometry sequence.  This version requires
 input noise and mask images.
 
 CALLING SEQUENCE:
-     import pkfit
+     from PyIDLPhot import pkfit_noise as pkfit
      pk = pkfit.pkfit_class(f, gauss, psf,
                             ronois, phpadu, noise_image, mask_image )
      errmag,chi,sharp,niter,scale,xnew,ynew = pk.pkfit(scale,x,y,sky,radius)
@@ -63,7 +63,7 @@ RETURNS:
 
 EXAMPLE:
      import pyfits
-     import pkfit_noise as pkfit
+     from PyIDLPhot import pkfit_noise as pkfit
 
      # read in the FITS images
      image = pyfits.getdata(fits_filename)
