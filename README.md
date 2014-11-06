@@ -24,4 +24,5 @@ after importing them.  For example:
 
 from PyPhot import pkfit
 
-Additional documentation is provided in the individual routines.
+Additional documentation is provided in the individual routines.  Please
+contact me with any issues, bugs, or suggestions.
