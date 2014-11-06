@@ -5,7 +5,7 @@ import numpy as np
 
 def meanclip(image, 
              clipsig=3, maxiter=5,
-             converge_num=0.02, verbose=False
+             converge_num=0.02, verbose=False,
              returnSubs=False):
     """Computes an iteratively sigma-clipped mean on a data set
     Clipping is done about median, but mean is returned.
