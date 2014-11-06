@@ -5,7 +5,7 @@
 
 example call:
 
-from PyIDLPhot import aper
+from PyPhot import aper
 import numpy as np
 image = pyfits.getdata(fits_filename)
 xpos,ypos = np.array([1450,1400]),np.array([1550,1600])

@@ -11,7 +11,7 @@ part of the DAOPHOT PSF photometry sequence.  This version requires
 input noise and mask images and DOES NOT recenter the PSF.
 
 CALLING SEQUENCE:
-     from PyIDLPhot import pkfit_norecent_noise as pkfit
+     from PyPhot import pkfit_norecent_noise as pkfit
      pk = pkfit.pkfit_class(f, gauss, psf,
                             ronois, phpadu )
      errmag,chi,sharp,niter,scale,xnew,ynew = pk.pkfit(scale,x,y,sky,radius)
