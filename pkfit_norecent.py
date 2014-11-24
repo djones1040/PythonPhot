@@ -11,7 +11,7 @@ CALLING SEQUENCE:
      from PyPhot import pkfit_norecent as pkfit
      pk = pkfit.pkfit_class(f, gauss, psf,
                             ronois, phpadu )
-     errmag,chi,sharp,niter,scale,xnew,ynew = pk.pkfit(scale,x,y,sky,radius)
+     errmag,chi,sharp,niter,scale,xnew,ynew = pk.pkfit_norecent(scale,x,y,sky,radius)
 
 PKFIT CLASS INPUTS:
      f       - NX by NY array containing actual picture data.
