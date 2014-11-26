@@ -55,7 +55,7 @@ def rdpsf(psfname):
     dx = rebin(dx, [ny, nx])
     dy = rebin(dy, [ny, nx])
 
-    psf = psf + dao_value.dao_value(dx,dy,gauss,resid,ps1d=False,deriv=False) #Compute DAOPHOT value at each point
+    psf = psf + dao_value.dao_value(dx,dy,gauss,resid,deriv=False) #Compute DAOPHOT value at each point
 
     hpsf['NAXIS1'] = npsf
     hpsf['NAXIS2'] = npsf
