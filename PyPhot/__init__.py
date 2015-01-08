@@ -12,20 +12,20 @@ from ._astropy_init import *
 
 # For egg_info test builds to pass, put package imports here.
 if not _ASTROPY_SETUP_:
-    import aper
-    import djs_angle_match
-    import find
-    import getpsf
-    import pkfit
-    import pkfit_noise
-    import pkfit_norecent
-    import pkfit_norecent_noise
-    import cntrd
-    import hex2dec
-    import meanclip
-    import rebin
-    import rdpsf
-    import pixwt
-    import mmm
-    import daoerf
-    import dao_value
+    from . import aper
+    from . import djs_angle_match
+    from . import find
+    from . import getpsf
+    from . import pkfit
+    from . import pkfit_noise
+    from . import pkfit_norecent
+    from . import pkfit_norecent_noise
+    from . import cntrd
+    from . import hex2dec
+    from . import meanclip
+    from . import rebin
+    from . import rdpsf
+    from . import pixwt
+    from . import mmm
+    from . import daoerf
+    from . import dao_value
