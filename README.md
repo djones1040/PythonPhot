@@ -1,28 +1,78 @@
-PyPhot
+PyPhot PSF Fitting Photometry Tutorial
 =========
 
-PyPhot is a simple Python translation of DAOPHOT-Type
-photometry procedures from the IDL AstroLib (Landsman 1993),
-including aperture and PSF-fitting algorithms, with a few modest additions to
-increase functionality and ease of use.  For those members of the astronomical
-community that prefer Python to IDL or do not have IDL licenses, we hope that these codes
-will allow fast, easy, and reliable photometric measurements.  These procedures are
-currently used in the Pan-STARRS supernova pipeline and the HST CLASH/CANDELS
-supernova analysis, and will be updated and expanded as our analysis requires.
+getpsf.py : Generates a point-spread function (PSF) from observed stars at 
+   specified locations.   Uses the family of  "peak fit" modules
+   (pkfit, pkfit_noise, pkfit_norecent, etc) to fit a gaussian to each
+   star and define an array of non-gaussian psf residuals.
+   Returns a 5-element vector defining the gaussian, a 2-d array of
+   psf residuals, and the magnitude of the psf.  Also writes out the
+   psf model to a fits file with the gaussian parameters in the header
+   and the residuals in the data array.
 
-Authors: David O. Jones, Daniel Scolnic, Steven A. Rodney
+rdpsf.py : Read the .fits file created by getpsf.py that contains the
+   psf model gaussian parameters and 2-d array of residuals. 
 
-Corresponding Author:
-     David O. Jones
-     Johns Hopkins University
-     djones@pha.jhu.edu
-     http://www.pha.jhu.edu/~djones/
 
-To install, just append the PyPhot directory to your PYTHONPATH
-environment variable.  Then use these routines in your python scripts
-after importing them.  For example:
+pkfit.py : fit a psf model to an isolated point source
+pkfit_noise : fitting with an input noise image
+pkfit_norecent : forced photometry (fitting a peak without recentering) 
+pkfit_norecent_noise : forced photometry with an input noise image
 
-from PyPhot import pkfit
+     
+-----------
+# EXAMPLE A :   Make a psf model 
 
-Additional documentation is provided in the individual routines.  Please
-contact me with any issues, bugs, or suggestions.
+         import getpsf
+         import aper
+         import numpy as np
+         # load FITS image and specify PSF star coordinates
+         image = pyfits.getdata(fits_filename)
+         xpos,ypos = np.array([1450,1400]),np.array([1550,1600])
+
+         # run aper to get mags and sky values for specified coords
+         mag,magerr,flux,fluxerr,sky,skyerr,badflag,outstr = \
+                aper.aper(image,xpos,ypos,phpadu=1,apr=5,zeropoint=25,
+                skyrad=[40,50],badpix=[-12000,60000],exact=True)
+
+         # use the stars at those coords to generate a PSF model
+         gauss,psf,psfmag = \
+                getpsf.getpsf(image,xpos,ypos,
+                              mag,sky,1,1,np.arange(len(xpos)),
+                              5,'output_psf.fits')
+
+------------
+# EXAMPLE B :  fit a psf to isolated stars
+
+     import pyfits
+     from PyPhot import pkfit
+
+     # read in the fits images containing the target sources
+     image = pyfits.getdata(fits_filename)
+     noiseim = pyfits.getdata(fits_noise_filename)
+     maskim = pyfits.getdata(fits_mask_filename)
+
+     # read in the fits image containing the PSF (gaussian model
+     # parameters and 2-d residuals array.
+     psf = pyfits.getdata(psf_filename)
+     hpsf = pyfits.getheader(psf_filename)
+     gauss = [hpsf['GAUSS1'],hpsf['GAUSS2'],hpsf['GAUSS3'],hpsf['GAUSS4'],hpsf['GAUSS5']]
+
+     # x and y points for PSF fitting
+     xpos,ypos = np.array([1450,1400]),np.array([1550,1600])
+
+     # run 'aper' on x,y coords to get sky values
+     mag,magerr,flux,fluxerr,sky,skyerr,badflag,outstr = \
+              aper.aper(image,xpos,ypos,phpadu=1,apr=5,zeropoint=25,
+              skyrad=[40,50],badpix=[-12000,60000],exact=True)
+
+     # load the pkfit class
+     pk = pkfit.pkfit_class(image,gauss,psf,1,1,noiseim,maskim)
+
+     # do the PSF fitting
+     for x,y,s in zip(xpos,ypos,sky):
+          errmag,chi,sharp,niter,scale = \
+              pk.pkfit_norecent_noise(1,x,y,s,5)
+          flux = scale*10**(0.4*(25.-hpsf['PSFMAG']))
+          dflux = errmag*10**(0.4*(25.-hpsf['PSFMAG']))
+          print('PSF fit to coords %.2f,%.2f gives flux %s +/- %s'%(x,y,flux,dflux))
