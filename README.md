@@ -1,4 +1,4 @@
-PyPhot PSF Fitting Photometry Tutorial
+PythonPhot PSF Fitting Photometry Tutorial
 =========
 
 getpsf.py : Generates a point-spread function (PSF) from observed stars at 
@@ -45,7 +45,7 @@ pkfit_norecent_noise : forced photometry with an input noise image
 # EXAMPLE B :  fit a psf to isolated stars
 
      import pyfits
-     from PyPhot import pkfit
+     from PythonPhot import pkfit
 
      # read in the fits images containing the target sources
      image = pyfits.getdata(fits_filename)
