@@ -249,18 +249,19 @@ def find(image,
     flux = np.zeros(ngood) ; sharp = np.zeros(ngood) ; roundness = np.zeros(ngood)
 
     if doprint:	#Create output file?
+        import time
 
-         if doprint == 1: file = 'find.prt'
-         else: file = doprint
-         if verbose:
-             print('Results will be written to a file ' + file)
-         fout = open(file,'w')
-         print >> fout, ' Program: FIND '+ systime()
-         print >> fout,' Threshold above background:',hmin
-         print >> fout,' Approximate FWHM:',fwhm
-         print >> fout,' Sharpness Limits: Low',sharplim[0], '  High',sharplim[1]
-         print >> fout,' Roundness Limits: Low',roundlim[0],'  High',roundlim[1]
-         print >> fout,' No of sources above threshold',ngood
+        if doprint == 1: file = 'find.prt'
+        else: file = doprint
+        if verbose:
+            print('Results will be written to a file ' + file)
+        fout = open(file,'w')
+        print >> fout, ' Program: FIND '+ time.asctime( time.localtime(time.time()) )
+        print >> fout,' Threshold above background:',hmin
+        print >> fout,' Approximate FWHM:',fwhm
+        print >> fout,' Sharpness Limits: Low',sharplim[0], '  High',sharplim[1]
+        print >> fout,' Roundness Limits: Low',roundlim[0],'  High',roundlim[1]
+        print >> fout,' No of sources above threshold',ngood
 
     if verbose:
         print('     STAR      X      Y     FLUX     SHARP    ROUND')
@@ -388,5 +389,6 @@ def find(image,
             print >> fout,i+1, x[i], y[i], flux[i], sharp[i], roundness[i]
 
 # FINISH:
-    fout.close()
+    if doprint:
+        fout.close()
     return(x,y,flux,sharp,roundness)
