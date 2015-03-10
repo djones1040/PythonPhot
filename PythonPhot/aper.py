@@ -298,6 +298,7 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                 skyskw = 0
 
             for k in range(Naper): # Find pixels within each aperture
+                thisapd = array([])
                 if ( edge[i] >= apr[k] ):   #Does aperture extend outside the image?
                     if exact:
                         mask = zeros(ny[i]*nx[i])
@@ -337,7 +338,12 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                         gfract = where(1 - full)[0]
                         factor = (area[k] - Nfull ) / np.sum(fractn[gfract])
                         fractn[gfract] = fractn[gfract]*factor
+                else:
+                    if verbose :
+                        print("WARNING : aperture extends outside the image!")
+                    continue
                     # END "if exact ...  else ..."
+
 
                 # Check for any bad pixel values (nan,inf) and those outside
                 # the user-specified range of valid pixel values.  If any
@@ -350,6 +356,7 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                               "may be biased.")
                     thisapd[np.isfinite()==False] = 0
                     apbad[k] = 1
+                    fractn = 0
                 if badpix[0] < badpix[1] :
                     ibadpix = np.where((thisapd<=badpix[0]) | (thisapd>=badpix[1]))
                     if len(ibadpix[0]) > 0 :
