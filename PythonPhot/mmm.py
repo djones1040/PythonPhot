@@ -281,8 +281,8 @@ def mmm( sky_vector,
             L = round(center-0.25)
             M = round(center+0.25)
             R = 0.25*readnoise
-            while ((J > 0) and (K < nsky-1) and \
-                       ( ((sky[L] - sky[J]) < R) or ((sky[K] - sky[M]) < R))):
+            while ((j > 0) and (k < nsky-1) and \
+                       ( ((sky[L] - sky[j]) < R) or ((sky[k] - sky[M]) < R))):
                 j -= 1
                 k += 1
 
