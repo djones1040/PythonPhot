@@ -128,21 +128,7 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
         import pdb
         pdb.set_trace()
 
-    # Set parameter limits
-    if len(minsky) == 0: minsky = 20
-
-    # Number of columns and rows in image array
-    s = np.shape(image)
-    ncol = s[1]
-    nrow = s[0]
-
-    if setskyval is not None :
-        if not np.iterable(setskyval) :
-            setskyval = [setskyval,0.,1.]
-        assert len(setskyval)==3, 'Keyword SETSKYVAL must contain 1 or 3 elements'
-        skyrad = [ 0., max(apr) + 1]
-    skyrad = asfarray(skyrad)
-
+    # Force np arrays
     if not np.iterable( xc ):
         xc = np.array([xc])
         yc = np.array([yc])
@@ -152,6 +138,25 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
         apr = np.array( [ apr ] )
     Naper = len( apr ) # Number of apertures
     Nstars = len( xc )   # Number of stars to measure
+
+    # Set parameter limits
+    if len(minsky) == 0: minsky = 20
+
+    # Number of columns and rows in image array
+    s = np.shape(image)
+    ncol = s[1]
+    nrow = s[0]
+
+
+    if setskyval is not None :
+        if not np.iterable(setskyval) :
+            setskyval = [setskyval,0.,1.]
+        assert len(setskyval)==3, 'Keyword SETSKYVAL must contain 1 or 3 elements'
+        skyrad = [ 0., max(apr) + 1]
+    skyrad = asfarray(skyrad)
+
+
+
 
     # String array to display mags for all apertures in one line for each star
     outstr = [ '' for star in range(Nstars)]
@@ -354,7 +359,7 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                         print("WARNING : nan or inf pixels detected in aperture.\n"
                               "We're setting these to 0, but the photometry"
                               "may be biased.")
-                    thisapd[np.isfinite()==False] = 0
+                    thisapd[np.isfinite(thisapd)==False] = 0
                     apbad[k] = 1
                     fractn = 0
                 if badpix[0] < badpix[1] :
