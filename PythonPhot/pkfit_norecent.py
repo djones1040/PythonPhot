@@ -400,7 +400,7 @@ class pkfit_class:
             #        if sharp < -99.999: sharp = -99.999
             #        elif sharp > 99.999: sharp = 99.999
 
-        if debug2:
+        if debug:
             print('pkfit took %s'%(time.time()-tstart))
 
         return(errmag,chi,sharp,niter,scale)
