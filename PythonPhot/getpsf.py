@@ -17,7 +17,7 @@ import pkfit_noise
 def getpsf(image,xc,yc,
            apmag,sky,ronois,
            phpadu,idpsf,psfrad,
-           fitrad,psfname, 
+           fitrad,psfname, zeropoint=0,
            debug = False):
     """Generates a point-spread function (PSF) from observed stars. 
 
@@ -82,6 +82,9 @@ def getpsf(image,xc,yc,
     	 psfname - Name of the FITS file that will contain the table of residuals,
     		    and the best-fit Gaussian parameters.  This file is 
     		    subsequently required for use by NSTAR or PKFIT.
+    	 zeropoint - Zero point value used to define the magnitudes provided
+    	        in apermag, to be written into the psf model header.
+                Default value is 0.0, indicating 'unknown'.
 
      OPTIONAL KEYWORD INPUT:
           debug    - if this keyword is True, then the result of each
@@ -358,7 +361,7 @@ def getpsf(image,xc,yc,
         goodrow = np.where(psftemp == psftemp)
         psfshape = np.shape(psf)
         for n0,n1 in zip(nanrow[0],nanrow[1]):
-            ind1 = n0 - 2; ind2 = no + 3
+            ind1 = n0 - 2; ind2 = n0 + 3
             ind3 = n1 - 2; ind4 = n1 + 3
             if ind1 < 0: ind1 = 0
             if ind2 > psfshape[0]: ind2 = psfshape[0]
@@ -396,17 +399,18 @@ def getpsf(image,xc,yc,
 #    psf = psf/psfratio
 
     hdu = pyfits.PrimaryHDU()        #Create a minimal FITS header
-    hdu.header['PHPADU'] = phpadu # , 'Photons per Analog Digital Unit'
-    hdu.header['RONOIS'] = ronois # , 'Readout Noise'
-    hdu.header['PSFRAD'] = psfrad # , 'Radius where PSF is defined (pixels)'
-    hdu.header['FITRAD'] = fitrad # , 'Fitting Radius'
-    hdu.header['PSFMAG'] = float(psfmag) # , 'PSF Magnitude'
-    hdu.header['GAUSS1'] = gauss[0] # , 'Gaussian Scale Factor'
-    hdu.header['GAUSS2'] = gauss[1] # , 'Gaussian X Position'
-    hdu.header['GAUSS3'] = gauss[2] # , 'Gaussian Y Position'
-    hdu.header['GAUSS4'] = gauss[3] # , 'Gaussian Sigma: X Direction'
-    hdu.header['GAUSS5'] = gauss[4] # , 'Gaussian Sigma: Y Direction'
-    if type(goodstar) == np.int: 
+    hdu.header['PHPADU'] = (phpadu, 'Photons per Analog Digital Unit')
+    hdu.header['RONOIS'] = (ronois, 'Readout Noise')
+    hdu.header['PSFRAD'] = (psfrad, 'Radius where PSF is defined (pixels)')
+    hdu.header['FITRAD'] = (fitrad, 'Fitting Radius')
+    hdu.header['PSFMAG'] = (float(psfmag), 'PSF Magnitude')
+    hdu.header['GAUSS1'] = (gauss[0], 'Gaussian Scale Factor')
+    hdu.header['GAUSS2'] = (gauss[1], 'Gaussian X Position')
+    hdu.header['GAUSS3'] = (gauss[2], 'Gaussian Y Position')
+    hdu.header['GAUSS4'] = (gauss[3], 'Gaussian Sigma: X Direction')
+    hdu.header['GAUSS5'] = (gauss[4], 'Gaussian Sigma: Y Direction')
+    hdu.header['PSFZPT'] = (float(zeropoint), 'zeropoint used to scale psf mag')
+    if type(goodstar) == np.int:
         goodstarlen = 1
         hdu.header['PSFID'] = goodstar
         print('Warning: Only one valid PSF star')
