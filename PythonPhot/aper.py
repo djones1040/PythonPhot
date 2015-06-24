@@ -207,7 +207,7 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                         (yc<0.5) | (yc>nrow-1.5), 1, 0 )
     if np.any( badstar ) :
         nbad = badstar.sum()
-        print('WARNING - ' + str(nbad) + ' star positions outside image')
+        print('WARNING [aper.py] - ' + str(nbad) + ' star positions outside image')
 
     if verbose :
         tloop = time.time()
@@ -346,7 +346,7 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                         fractn[gfract] = fractn[gfract]*factor
                 else:
                     if verbose :
-                        print("WARNING : aperture extends outside the image!")
+                        print("WARNING [aper.py]: aperture extends outside the image!")
                     continue
                     # END "if exact ...  else ..."
 

@@ -103,7 +103,7 @@ def cntrd(img, x, y,
     nbox = 2*nhalf+1             #Width of box to be used to compute centroid
     nhalfbig = nhalf + extendbox
     nbig = nbox + extendbox*2        #Extend box 3 pixels on each side to search for max pixel value
-    if type(x) == np.float or type(x) == np.int: npts = 1
+    if isinstance(x,float) or isinstance(x,int): npts = 1
     else: npts = len(x) 
     if npts == 1: xcen = float(x) ; ycen = float(y)
     else: xcen = x.astype(float) ; ycen = y.astype(float)
