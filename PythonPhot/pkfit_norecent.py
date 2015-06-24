@@ -330,8 +330,8 @@ class pkfit_class:
             c = zeros([3,3])
 
             for kk in range(3):
-                v[kk] = sum(df*t[kk,:]*wt)
-                for ll in range(3): c[ll,kk] = sum(t[kk,:]*t[ll,:]*wt)
+                v[kk] = sum(df*t[kk,:][lilrho]*wt)
+                for ll in range(3): c[ll,kk] = sum(t[kk,:][lilrho]*t[ll,:][lilrho]*wt)
 
             # Compute the (robust) goodness-of-fit index CHI.
             # CHI is pulled toward its expected value of unity before being stored
