@@ -18,7 +18,7 @@ if not _ASTROPY_SETUP_:
     from . import getpsf
     from . import pkfit
     from . import pkfit_noise
-    from . import pkfit_norecent
+    from . import pkfit_norecenter
     from . import pkfit_norecent_noise
     from . import cntrd
     from . import hex2dec

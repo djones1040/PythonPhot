@@ -142,7 +142,7 @@ def add_and_recover(imagedat, psfmodel, xy, fluxscale=1, psfradius=5,
     """
     if not skyannpix:
         skyannpix = [8, 15]
-    from pkfit_norecent import pkfit_class
+    from pkfit_norecenter import pkfit_class
     from aper import aper
     from cntrd import cntrd
     from dophotometry import rdpsfmodel

@@ -172,7 +172,7 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
         skyannpix = [8, 15]
     import numpy as np
     from cntrd import cntrd
-    from pkfit_norecent import pkfit_class
+    from pkfit_norecenter import pkfit_class
     from aper import aper
     from fakestar import addtoimarray, add_and_recover
 
