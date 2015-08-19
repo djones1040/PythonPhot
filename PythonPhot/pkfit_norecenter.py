@@ -130,9 +130,6 @@ class pkfit_class:
         chi = 100000
         sharp = 100000
 
-        if f.dtype != 'float64':
-            f = f.astype('float64')
-
         # psf1d = psf.reshape(shape(psf)[0]**2.)
         s = shape(f)  # Get array dimensions
         nx = s[1]
