@@ -146,7 +146,7 @@ def add_and_recover(imagedat, psfmodel, xy, fluxscale=1, psfradius=5,
     from aper import aper
     from cntrd import cntrd
     from dophotometry import rdpsfmodel
-    # from .aper import aper
+    #from .aper import aper
     #from .cntrd import cntrd
     #from .dophotometry import rdpsfmodel
 

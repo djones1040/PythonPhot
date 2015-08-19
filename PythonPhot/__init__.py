@@ -31,5 +31,4 @@ if not _ASTROPY_SETUP_:
     from . import dao_value
     from . import dophotometry
     from . import fakestar
-    from . import hstphot
 

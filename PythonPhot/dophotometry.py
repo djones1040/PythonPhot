@@ -167,7 +167,8 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
              The flux measured through the given aperture and through
              psf fitting, along with associated errors.
     """
-    if not skyannpix:
+    import numpy as np
+    if not np.any(skyannpix):
         skyannpix = [8, 15]
     import numpy as np
     from cntrd import cntrd
@@ -259,9 +260,9 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
         print("WARNING: aperture flux may be biased. Empty aperture flux tests"
               " found a significantly non-zero sky value not accounted for in "
               "measurement of the target flux:  \\"
-              "Mean empty aperture flux in sky annulus = %.3f\\"
+              "Mean empty aperture flux in sky annulus = %s\\"
               % emptyapmeanflux +
-              "sigma of empty aperture flux distribution = %.3f"
+              "sigma of empty aperture flux distribution = %s"
               % emptyapsigma)
 
     if psfmodel is not None:
