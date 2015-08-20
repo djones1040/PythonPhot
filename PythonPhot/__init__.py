@@ -29,6 +29,6 @@ if not _ASTROPY_SETUP_:
     from . import mmm
     from . import daoerf
     from . import dao_value
-    from . import dophotometry
+    from . import photfunctions
     from . import fakestar
 
