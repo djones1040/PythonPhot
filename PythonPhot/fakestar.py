@@ -146,7 +146,7 @@ def add_and_recover(imagedat, psfmodel, xy, fluxscale=1, psfradius=5,
         = aperout
 
     # do the psf fitting
-    scale = pk.pkfit_norecenter_numpy(1, x, y, sky, psfradius)
+    scale = pk.pkfit_fast_norecenter(1, x, y, sky, psfradius)
     fluxpsf = scale * 10 ** (-0.4 * (psfmag - psfzpt))
 
     if cleanup:

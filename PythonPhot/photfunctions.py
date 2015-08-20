@@ -213,7 +213,7 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
         pk = pkfit_class(imagedat, gaussparam, lookuptable, ronoise, phpadu)
 
         # do the psf fitting
-        scale = pk.pkfit_norecenter_numpy(1, x, y, sky, psfradpix)
+        scale = pk.pkfit_fast_norecenter(1, x, y, sky, psfradpix)
         psfflux = scale * 10 ** (0.4 * (25. - psfmag))
 
         # remove the target star from the image
