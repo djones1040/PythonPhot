@@ -1,3 +1,10 @@
+from pkfit_norecenter import pkfit_class
+from aper import aper
+from cntrd import cntrd
+from photfunctions import rdpsfmodel
+import numpy as np
+from dao_value import dao_value
+
 def mkpsfimage(psfmodel, x, y, size, fluxscale=1):
     """  Construct a numpy array showing the psf model appropriately scaled,
     using the gaussian parameters from the header and the residual components
@@ -16,10 +23,6 @@ def mkpsfimage(psfmodel, x, y, size, fluxscale=1):
        the flux, summed across all pixels in the output image
     :return: a numpy array holding the psf image realization
     """
-    import numpy as np
-    from dao_value import dao_value
-    # from .dophotometry import rdpsfmodel
-    from dophotometry import rdpsfmodel
 
     # require stampsize to be odd, so the central pixel contains
     # the peak of the psf. Define dx,dy as the half-width of the stamp on
@@ -60,10 +63,6 @@ def addtoimarray(imagedat, psfmodel, xy, fluxscale=1):
     :param fluxscale: flux scaling factor for the psf
     :return: a numpy array showing the psf image realization
     """
-    import numpy as np
-    # from .dophotometry import rdpsfmodel
-    from dophotometry import rdpsfmodel
-
     gaussparam, lookuptable, psfmag, psfzpt = rdpsfmodel(psfmodel)
 
     maxsize = int(np.sqrt(lookuptable.size) / 2 - 2)
@@ -79,46 +78,6 @@ def addtoimarray(imagedat, psfmodel, xy, fluxscale=1):
         += psfimage
 
     return imagedat
-
-
-def addtofits(fitsin, fitsout, psfmodelfile, position, fluxscale,
-              coordsys='xy', verbose=False):
-    """ Create a psf, add it into the given fits image at the
-
-    :param fitsin: fits file name for the target image
-    :param psfmodelfile: fits file holding the psf model
-    :param position: Scalar or array, giving the psf center positions
-    :param fluxscale: Scalar or array, giving the psf flux scaling factors
-    :param coordsys: Either 'radec' or 'xy'
-    :return:
-    """
-    import numpy as np
-    from .hstphot import radec2xy
-    import pyfits
-    from .dophotometry import rdpsfmodel
-
-    if not np.iterable(fluxscale):
-        fluxscale = np.array([fluxscale])
-        position = np.array([position])
-
-    if coordsys == 'radec':
-        ra = position[:, 0]
-        dec = position[:, 1]
-        position = radec2xy(fitsin, ra, dec, ext=0)
-
-    image = pyfits.open(fitsin, mode='readonly')
-    imagedat = image[0].data
-
-    psfmodel = rdpsfmodel(psfmodelfile)
-
-    for i in range(len(fluxscale)):
-        imagedat = addtoimarray(imagedat, psfmodel, position[i], fluxscale[i])
-    image[0].data = imagedat
-
-    image.writeto(fitsout, clobber=True)
-    if verbose:
-        print("Wrote updated image to %s" % fitsout)
-    return
 
 
 def add_and_recover(imagedat, psfmodel, xy, fluxscale=1, psfradius=5,
@@ -142,13 +101,6 @@ def add_and_recover(imagedat, psfmodel, xy, fluxscale=1, psfradius=5,
     """
     if not skyannpix:
         skyannpix = [8, 15]
-    from pkfit_norecenter import pkfit_class
-    from aper import aper
-    from cntrd import cntrd
-    from dophotometry import rdpsfmodel
-    #from .aper import aper
-    #from .cntrd import cntrd
-    #from .dophotometry import rdpsfmodel
 
     # add the psf to the image data array
     imdatwithpsf = addtoimarray(imagedat, psfmodel, xy, fluxscale=fluxscale)
@@ -163,7 +115,7 @@ def add_and_recover(imagedat, psfmodel, xy, fluxscale=1, psfradius=5,
     x, y = xy
 
     if debug:
-        from .dophotometry import showpkfit
+        from .photfunctions import showpkfit
         from matplotlib import pyplot as pl, cm
 
         fig = pl.figure(3)
@@ -194,8 +146,7 @@ def add_and_recover(imagedat, psfmodel, xy, fluxscale=1, psfradius=5,
         = aperout
 
     # do the psf fitting
-    errmag, chi, sharp, niter, scale = pk.pkfit_norecent(1, x, y, sky,
-                                                         psfradius)
+    scale = pk.pkfit_norecenter_numpy(1, x, y, sky, psfradius)
     fluxpsf = scale * 10 ** (-0.4 * (psfmag - psfzpt))
 
     if cleanup:
@@ -209,7 +160,7 @@ def testgrid(imagefile, psfmodelfile, psfradius=5, fluxscale=100):
     import pyfits
     import numpy as np
     import os
-    from .dophotometry import rdpsfmodel
+    from .photfunctions import rdpsfmodel
 
     image = pyfits.open(imagefile, 'readonly')
     imagedat = image[0].data
