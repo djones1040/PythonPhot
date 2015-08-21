@@ -106,7 +106,6 @@ REVISON HISTORY:
 import numpy as np
 from scipy.optimize import leastsq
 import dao_value
-from numpy.ma import masked_array
 from exceptions import RuntimeWarning
 
 sqrt, where, abs, shape, zeros, array, isnan, \
@@ -126,7 +125,7 @@ class pkfit_class:
         self.phpadu = phpadu
 
     def pkfit_fast_norecenter(self, scale, x, y, sky, radius,
-                               debug=False, maxiter=25, sigclip=10):
+                              debug=False, maxiter=25, sigclip=4):
         """ Fit the target star with a psf model, using quick numpy-based
         least squares fitting, with iterative sigma clipping.
 
@@ -209,7 +208,7 @@ class pkfit_class:
 
         # Extract a subarray with the observed flux for all pixels within the
         # fitting radius of the center of the target star
-        flux_observed_tofit = masked_array(
+        flux_observed_tofit = (
             f[iylo:iyhi + 1, ixlo:ixhi + 1].ravel()[[i_tofit]])
 
         # Call the function dao_value to generate realized flux values
@@ -232,13 +231,16 @@ class pkfit_class:
         # Since we are not allowing the PSF to be recentered in this version,
         # the error function to minimize has only one free variable, SCALE:
         #    err = sum(flux_observed * weight - SCALE * flux_model * weight)
-        def errfunc(psf_scale):
+        def errfunc(psf_scale, goodpixmask=1):
             """ Error function to minimize
             :param psf_scale: the psf scaling factor
+            :param goodpixmask: set to 1 if all pixels are good;
+                   or set to an array of with 1 for good pixels and 0 for bad
             :return: vector of pixel residuals
             """
-            error_vector = (flux_observed_tofit_weighted_minussky
-                            - psf_scale * flux_model_tofit_weighted)
+            fobs = flux_observed_tofit_weighted_minussky * goodpixmask
+            fmod = flux_model_tofit_weighted * goodpixmask
+            error_vector = fobs - psf_scale * fmod
             return error_vector
 
         # The expected random error in the pixel is the quadratic sum of
@@ -266,32 +268,22 @@ class pkfit_class:
         # iteratively rejecting bad pixels that are more than 'sigclip'
         # sigma discrepant from the model, where sigma is the expected
         # random error (fluxerr above), separately defined for each pixel
-        badpix_mask = np.zeros(n_tofit)
+        goodpix_mask = 1
+        n_badpix_beforefit = 0
         for iteration in xrange(maxiter):
-            n_badpix_beforefit = sum(badpix_mask)
-            bestfit_scale, cov = leastsq(errfunc, scale, full_output=False)
+            bestfit_scale, cov = leastsq(errfunc, scale, args=goodpix_mask)
             scale = bestfit_scale[0]
             flux_resid_tofit = (flux_observed_tofit -
                                 scale * flux_model_tofit - sky)
-            if iteration > 1:
-                badpix_mask = abs(flux_resid_tofit.data / fluxerr) > sigclip
-            else:
-                badpix_mask = abs(flux_resid_tofit / fluxerr) > sigclip
-            if sum(badpix_mask) <= n_badpix_beforefit:
+            goodpix_mask = abs(flux_resid_tofit / fluxerr) < sigclip
+            n_badpix_afterfit = n_tofit - sum(goodpix_mask)
+            if n_badpix_afterfit <= n_badpix_beforefit:
                 break
-            elif debug:
-                import pdb
-                pdb.set_trace()
-            if n_badpix_beforefit > 0.5 * n_tofit:
+            if n_badpix_afterfit > 0.5 * n_tofit:
                 raise RuntimeWarning(
                     ">50pct of pixels >%.1f sigma discrepant.  " % sigclip +
                     "Disabling badpix masking in iteration %i." % iteration)
-                flux_observed_tofit.mask = np.zeros(n_tofit)
-            if isinstance(flux_observed_tofit, np.ma.MaskedArray):
-                flux_observed_tofit.mask = badpix_mask
-            else:
-                flux_observed_tofit = masked_array(flux_observed_tofit,
-                                                   mask=badpix_mask)
+                goodpix_mask = 1
 
         if iteration == maxiter - 1:
             raise RuntimeWarning("Max # of iterations exceeded")
