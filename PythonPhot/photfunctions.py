@@ -215,7 +215,6 @@ def showpkfit(imagedat, psfmodelfile, xyposition, stampsize, fluxscale,
     :return:
     """
     from matplotlib import pyplot as pl, cm, ticker
-    from .fakestar import mkpsfimage
 
     # require stampsize to be odd, so the central pixel contains
     # the peak of the psf. Define dx,dy as the half-width of the stamp on
