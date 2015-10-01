@@ -17,7 +17,7 @@ from cntrd import cntrd
 from pkfit_norecenter import pkfit_class
 from dao_value import dao_value
 from scipy.optimize import curve_fit
-
+from astropy.stats import sigma_clipped_stats
 
 def mkpsfimage(psfmodel, x, y, size, fluxscale=1):
     """  Construct a numpy array with the psf model appropriately scaled,
@@ -180,9 +180,8 @@ def add_and_recover(imagedat, psfmodel, xy, fluxscale=1, psfradius=5,
 
     if recenter:
         xc, yc = cntrd(imdatwithpsf, x, y, psfradius, verbose=verbose)
-        if xc > 0 and yc > 0:
+        if xc > 0 and yc > 0 and abs(xc - xy[0]) < 5 and abs(yc - xy[1]) < 5:
             x, y = xc, yc
-
     # do aperture photometry to get the sky
     aperout = aper(imdatwithpsf, x, y, phpadu=phpadu,
                    apr=psfradius * 3, skyrad=skyannpix,
@@ -194,10 +193,14 @@ def add_and_recover(imagedat, psfmodel, xy, fluxscale=1, psfradius=5,
         = aperout
 
     # do the psf fitting
-    scale = pk.pkfit_fast_norecenter(1, x, y, sky, psfradius)
-    fluxpsf = scale * 10 ** (-0.4 * (psfmag - psfzpt))
-
+    try:
+        scale = pk.pkfit_fast_norecenter(1, x, y, sky, psfradius)
+        fluxpsf = scale * 10 ** (-0.4 * (psfmag - psfzpt))
+    except RuntimeWarning:
+        print("photfunctions.add_and_recover failed on RuntimeWarning")
+        fluxpsf = -99
     if cleanup:
+        # remove the fake psf from the image
         imagedat = addtoimarray(imdatwithpsf, psfmodel, xy,
                                 fluxscale=-fluxscale)
 
@@ -351,7 +354,7 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
     xtestpositions = r * np.cos(theta) + x
     ytestpositions = r * np.sin(theta) + y
 
-    psfflux = fakefluxsigma = None
+    psfflux = fakefluxsigma = np.nan
     if psfmodel is not None:
         # set up the psf model realization
         gaussparam, lookuptable, psfmag, psfzpt = rdpsfmodel(psfmodel)
@@ -359,36 +362,43 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
         pk = pkfit_class(imagedat, gaussparam, lookuptable, ronoise, phpadu)
 
         # do the psf fitting
-        scale = pk.pkfit_fast_norecenter(1, x, y, sky, psfradpix)
-        psfflux = scale * 10 ** (0.4 * (25. - psfmag))
+        try:
+            scale = pk.pkfit_fast_norecenter(1, x, y, sky, psfradpix)
+            psfflux = scale * 10 ** (0.4 * (25. - psfmag))
+        except RuntimeWarning:
+            print("PythonPhot.pkfit_norecenter failed.")
+            psfflux = np.nan
 
-        # remove the target star from the image
-        imagedat = addtoimarray(imagedat, psfmodel, [x, y],
-                                fluxscale=-psfflux)
+        if np.isfinite(psfflux):
+            # remove the target star from the image
+            imagedat = addtoimarray(imagedat, psfmodel, [x, y],
+                                    fluxscale=-psfflux)
 
-        # plant fakes and recover their fluxes with psf fitting
-        # imdatsubarray = imagedat[y-rmax-2*psfradpix:y+rmax+2*psfradpix,
-        #                x-rmax-2*psfradpix:x+rmax+2*psfradpix]
-        fakecoordlist, fakefluxlist = [], []
-        for xt in xtestpositions:
-            for yt in ytestpositions:
-                # To ensure appropriate sampling of sub-pixel positions,
-                # we assign random sub-pixel offsets to each position.
-                xt = int(xt) + np.random.random()
-                yt = int(yt) + np.random.random()
-                fakefluxaper, fakefluxpsf, fakecoord = add_and_recover(
-                    imagedat, psfmodel, [xt, yt], fluxscale=psfflux,
-                    cleanup=True, psfradius=psfradpix, recenter=recenter_fakes)
-                fakecoordlist.append(fakecoord)
-                fakefluxlist.append(fakefluxpsf)
-        fakefluxmean, fakefluxsigma = gaussian_fit_to_histogram(fakefluxlist)
-        if abs(fakefluxmean - psfflux) > fakefluxsigma and verbose:
-            print("WARNING: psf flux may be biased. Fake psf flux tests "
-                  "found a significantly non-zero sky value not accounted for "
-                  "in measurement of the target flux:  \\"
-                  "Mean psf flux offset in sky annulus = %.3e\\" %
-                  (fakefluxmean - psfflux) +
-                  "sigma of fake flux distribution = %.3e" % fakefluxsigma)
+            # plant fakes and recover their fluxes with psf fitting
+            # imdatsubarray = imagedat[y-rmax-2*psfradpix:y+rmax+2*psfradpix,
+            #                x-rmax-2*psfradpix:x+rmax+2*psfradpix]
+            fakecoordlist, fakefluxlist = [], []
+            for xt in xtestpositions:
+                for yt in ytestpositions:
+                    # To ensure appropriate sampling of sub-pixel positions,
+                    # we assign random sub-pixel offsets to each position.
+                    xt = int(xt) + np.random.random()
+                    yt = int(yt) + np.random.random()
+                    fakefluxaper, fakefluxpsf, fakecoord = add_and_recover(
+                        imagedat, psfmodel, [xt, yt], fluxscale=psfflux,
+                        cleanup=True, psfradius=psfradpix, recenter=recenter_fakes)
+                    if np.isfinite(fakefluxpsf):
+                        fakecoordlist.append(fakecoord)
+                        fakefluxlist.append(fakefluxpsf)
+            fakefluxlist = np.array(fakefluxlist)
+            fakefluxmean, fakefluxsigma = gaussian_fit_to_histogram(fakefluxlist)
+            if abs(fakefluxmean - psfflux) > fakefluxsigma and verbose:
+                print("WARNING: psf flux may be biased. Fake psf flux tests "
+                      "found a significantly non-zero sky value not accounted for "
+                      "in measurement of the target flux:  \\"
+                      "Mean psf flux offset in sky annulus = %.3e\\" %
+                      (fakefluxmean - psfflux) +
+                      "sigma of fake flux distribution = %.3e" % fakefluxsigma)
 
     # drop down empty apertures and recover their fluxes with aperture phot
     # NOTE : if the star was removed for psf fitting, then we take advantage
@@ -399,19 +409,24 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
                         exact=False, verbose=verbose,
                         skyalgorithm=skyalgorithm, debug=debug)
     emptyapflux = emptyaperout[2]
-    emptyapmeanflux, emptyapsigma = gaussian_fit_to_histogram(emptyapflux)
+    if np.any(np.isfinite(emptyapflux)):
+        emptyapmeanflux, emptyapsigma = gaussian_fit_to_histogram(emptyapflux)
+        emptyapbias = abs(emptyapmeanflux) - emptyapsigma
+        if np.any(emptyapbias > 0) and verbose:
+            print("WARNING: aperture flux may be biased. Empty aperture flux tests"
+                  " found a significantly non-zero sky value not accounted for in "
+                  "measurement of the target flux:  \\"
+                  "Mean empty aperture flux in sky annulus = %s\\"
+                  % emptyapmeanflux +
+                  "sigma of empty aperture flux distribution = %s"
+                  % emptyapsigma)
+    else:
+        if np.iterable(apradpix):
+            emptyapsigma = [np.nan for aprad in apradpix]
+        else:
+            emptyapsigma = np.nan
 
-    emptyapbias = abs(emptyapmeanflux) - emptyapsigma
-    if np.any(emptyapbias > 0) and verbose:
-        print("WARNING: aperture flux may be biased. Empty aperture flux tests"
-              " found a significantly non-zero sky value not accounted for in "
-              "measurement of the target flux:  \\"
-              "Mean empty aperture flux in sky annulus = %s\\"
-              % emptyapmeanflux +
-              "sigma of empty aperture flux distribution = %s"
-              % emptyapsigma)
-
-    if psfmodel is not None:
+    if psfmodel is not None and np.isfinite(psfflux):
         # return the target star back into the image
         imagedat = addtoimarray(imagedat, psfmodel, [x, y],
                                 fluxscale=psfflux)
@@ -437,9 +452,9 @@ def gaussian_fit_to_histogram(dataset):
                             for i in range(np.shape(dataset)[1])])
         return musigma[:, 0], musigma[:, 1]
 
+    dataset = dataset[np.isfinite(dataset)]
     ndatapoints = len(dataset)
-    stderr = np.std(dataset)
-    stdmedian = np.median(dataset)
+    stdmean, stdmedian, stderr, = sigma_clipped_stats(dataset, sigma=5.0)
     nhistbins = max(10, int(ndatapoints / 10))
     histbins = np.linspace(stdmedian - 3 * stderr, stdmedian + 3 * stderr,
                            nhistbins)
@@ -448,7 +463,6 @@ def gaussian_fit_to_histogram(dataset):
     binpeak = float(np.max(yhist))
     param0 = [stdmedian, stderr]  # initial guesses for gaussian mu and sigma
     xval = xhist[:-1] + (binwidth / 2)
-    # noinspection PyTypeChecker
     yval = yhist / binpeak
     minparam, cov = curve_fit(gauss, xval, yval, p0=param0)
     mumin, sigmamin = minparam

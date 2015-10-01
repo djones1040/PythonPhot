@@ -280,7 +280,8 @@ class pkfit_class:
             if n_badpix_afterfit <= n_badpix_beforefit:
                 break
             if n_badpix_afterfit > 0.5 * n_tofit:
-                raise RuntimeWarning(
+                #raise RuntimeWarning(
+                print(
                     ">50pct of pixels >%.1f sigma discrepant.  " % sigclip +
                     "Disabling badpix masking in iteration %i." % iteration)
                 goodpix_mask = 1
