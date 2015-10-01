@@ -214,9 +214,9 @@ def cntrd(img, x, y,
 
         dy = sumxsq*sumd/(sumc*sumxd)
         if (np.abs(dy) > nhalf):  #Reject if computed Y centroid outside box
+            xcen[i]=-1 ; ycen[i]=-1
             if verbose:
-                print('Computed X centroid for position '+ pos + ' out of range')
-                xcen[i]=-1 ; ycen[i]=-1
+                print('Computed Y centroid for position '+ pos + ' out of range')
                 continue
  
         ycen[i] = ymax-dy
