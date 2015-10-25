@@ -378,8 +378,7 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
             # imdatsubarray = imagedat[y-rmax-2*psfradpix:y+rmax+2*psfradpix,
             #                x-rmax-2*psfradpix:x+rmax+2*psfradpix]
             fakecoordlist, fakefluxlist = [], []
-            for xt in xtestpositions:
-                for yt in ytestpositions:
+            for xt, yt in zip(xtestpositions, ytestpositions):
                     # To ensure appropriate sampling of sub-pixel positions,
                     # we assign random sub-pixel offsets to each position.
                     xt = int(xt) + np.random.random()
@@ -398,7 +397,14 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
                       "in measurement of the target flux:  \\"
                       "Mean psf flux offset in sky annulus = %.3e\\" %
                       (fakefluxmean - psfflux) +
-                      "sigma of fake flux distribution = %.3e" % fakefluxsigma)
+                      "sigma of fake flux distribution = %.3e" %
+                      fakefluxsigma +
+                      "NOTE: this is included as a systematic error, added in "
+                      "quadrature to the psf flux err derived from fake psf "
+                      "recovery.")
+            psffluxerr = np.sqrt((fakefluxmean - psfflux)**2 +
+                                 fakefluxsigma**2)
+
 
     # drop down empty apertures and recover their fluxes with aperture phot
     # NOTE : if the star was removed for psf fitting, then we take advantage
@@ -435,7 +441,7 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
         import pdb
         pdb.set_trace()
 
-    return apflux, emptyapsigma, psfflux, fakefluxsigma, sky, skyerr
+    return apflux, emptyapsigma, psfflux, psffluxerr, sky, skyerr
 
 
 def gaussian_fit_to_histogram(dataset):
