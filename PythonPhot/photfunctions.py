@@ -287,7 +287,7 @@ def showpkfit(imagedat, psfmodelfile, xyposition, stampsize, fluxscale,
 def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
                      apradpix=3, skyannpix=None, skyalgorithm='sigmaclipping',
                      setskyval=None, recenter_target=True, recenter_fakes=True,
-                     exact=True, ronoise=1, phpadu=1, verbose=False,
+                     exptime=1, exact=True, ronoise=1, phpadu=1, verbose=False,
                      debug=False):
     """  Measure the flux and flux uncertainty for a source at the given x,y
     position using both aperture and psf-fitting photometry.
@@ -311,6 +311,7 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
     :param recenter_target: use cntrd to locate the target center near the
            given xy position.
     :param recenter_fakes: recenter on each planted fake when recovering it
+    :param exptime: exposure time of the image, for determining poisson noise
     :param ronoise: read-out noise, for determining aperture flux error
            analytically
     :param phpadu: photons-per-ADU, for determining aper flux err analytically
@@ -354,7 +355,7 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
     xtestpositions = r * np.cos(theta) + x
     ytestpositions = r * np.sin(theta) + y
 
-    psfflux = fakefluxsigma = np.nan
+    psfflux = psffluxerr = np.nan
     if psfmodel is not None:
         # set up the psf model realization
         gaussparam, lookuptable, psfmag, psfzpt = rdpsfmodel(psfmodel)
@@ -402,9 +403,14 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
                       "NOTE: this is included as a systematic error, added in "
                       "quadrature to the psf flux err derived from fake psf "
                       "recovery.")
-            psffluxerr = np.sqrt((fakefluxmean - psfflux)**2 +
+            psfflux_poissonerr = (poissonErr(psfflux * exptime, confidence=1) /
+                                  exptime)
+            # Total flux error is the quadratic sum of the poisson noise with
+            # the systematic (shift) and statistical (dispersion) errors
+            # inferred from fake psf planting and recovery
+            psffluxerr = np.sqrt(psfflux_poissonerr**2 +
+                                 (fakefluxmean - psfflux)**2 +
                                  fakefluxsigma**2)
-
 
     # drop down empty apertures and recover their fluxes with aperture phot
     # NOTE : if the star was removed for psf fitting, then we take advantage
@@ -426,11 +432,21 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
                   % emptyapmeanflux +
                   "sigma of empty aperture flux distribution = %s"
                   % emptyapsigma)
+        if np.iterable(apflux):
+            apflux_poissonerr = np.array(
+                [poissonErr(fap * exptime, confidence=1) / exptime
+                 for fap in apflux])
+        else:
+            apflux_poissonerr = (poissonErr(apflux * exptime, confidence=1) /
+                                 exptime)
+        apfluxerr = np.sqrt(apflux_poissonerr**2 +
+                            emptyapbias**2 + emptyapsigma**2)
+
     else:
         if np.iterable(apradpix):
-            emptyapsigma = [np.nan for aprad in apradpix]
+            apfluxerr = [np.nan for aprad in apradpix]
         else:
-            emptyapsigma = np.nan
+            apfluxerr = np.nan
 
     if psfmodel is not None and np.isfinite(psfflux):
         # return the target star back into the image
@@ -441,7 +457,7 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
         import pdb
         pdb.set_trace()
 
-    return apflux, emptyapsigma, psfflux, psffluxerr, sky, skyerr
+    return apflux, apfluxerr, psfflux, psffluxerr, sky, skyerr
 
 
 def gaussian_fit_to_histogram(dataset):
@@ -473,3 +489,46 @@ def gaussian_fit_to_histogram(dataset):
     minparam, cov = curve_fit(gauss, xval, yval, p0=param0)
     mumin, sigmamin = minparam
     return mumin, sigmamin
+
+def poissonErr( N, confidence=1 ):
+    """
+    Adapted from P.K.G.Williams :
+    http://newton.cx/~peter/2012/06/poisson-distribution-confidence-intervals/
+
+    Let's say you observe n events in a period and want to compute the k
+    confidence interval on the true rate - that is, 0 < k <= 1, and k =
+    0.95 would be the equivalent of 2sigma. Let a = 1 - k, i.e. 0.05. The
+    lower bound of the confidence interval, expressed as a potential
+    number of events, is
+       scipy.special.gammaincinv (n, 0.5 * a)
+    and the upper bound is
+       scipy.special.gammaincinv (n + 1, 1 - 0.5 * a)
+
+    The halving of a is just because the 95% confidence interval is made
+    up of two tails of 2.5% each, so the gammaincinv function is really,
+    once you chop through the obscurity, exactly what you want.
+
+    INPUTS :
+      N : the number of observed events
+
+      confidence : may either be a float <1, giving the exact
+          confidence limit desired (e.g.  0.95 or 0.99)
+          or it can be an integer in [1,2,3], in which case
+          we set the desired confidence interval to match
+          the 1-, 2- or 3-sigma gaussian confidence limits
+             confidence=1 gives the 1-sigma (68.3%) confidence limits
+             confidence=2  ==>  95.44%
+             confidence=3  ==>  99.74%
+    """
+    from scipy.special import gammaincinv as ginv
+    if confidence<1 : k = confidence
+    elif confidence==1 : k = 0.6826
+    elif confidence==2 : k = 0.9544
+    elif confidence==3 : k = 0.9974
+    else :
+        print( "ERROR : you must choose nsigma from [1,2,3]")
+        return( None )
+    lower = ginv( N, 0.5 * (1-k) )
+    upper = ginv( N+1, 1-0.5*(1-k) )
+    mean_error = (upper-lower)/2.
+    return( mean_error )
