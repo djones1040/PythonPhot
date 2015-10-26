@@ -103,7 +103,7 @@ def cntrd(img, x, y,
     nbox = 2*nhalf+1             #Width of box to be used to compute centroid
     nhalfbig = nhalf + extendbox
     nbig = nbox + extendbox*2        #Extend box 3 pixels on each side to search for max pixel value
-    if type(x) == np.float or type(x) == np.int: npts = 1
+    if isinstance(x,float) or isinstance(x,int): npts = 1
     else: npts = len(x) 
     if npts == 1: xcen = float(x) ; ycen = float(y)
     else: xcen = x.astype(float) ; ycen = y.astype(float)
@@ -214,9 +214,9 @@ def cntrd(img, x, y,
 
         dy = sumxsq*sumd/(sumc*sumxd)
         if (np.abs(dy) > nhalf):  #Reject if computed Y centroid outside box
+            xcen[i]=-1 ; ycen[i]=-1
             if verbose:
-                print('Computed X centroid for position '+ pos + ' out of range')
-                xcen[i]=-1 ; ycen[i]=-1
+                print('Computed Y centroid for position '+ pos + ' out of range')
                 continue
  
         ycen[i] = ymax-dy

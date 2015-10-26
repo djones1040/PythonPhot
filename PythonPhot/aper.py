@@ -24,7 +24,7 @@ where,asfarray,asarray,array,zeros,arange = np.where,np.asfarray,np.asarray,np.a
 
 def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
          skyrad=[40,50], badpix=[0,0], setskyval = None, minsky=[],
-         skyisempty=False, exact = False, readnoise = 0,
+         skyalgorithm='mmm', exact = False, readnoise = 0,
          verbose=True, debug=False):
     """ Compute concentric aperture photometry on one ore more stars
     (adapted for IDL from DAOPHOT, then translated from IDL to Python).
@@ -74,6 +74,8 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                    the sigma of the sky value, and the number of elements used
                    to compute a sky value.   The 3 element form of SETSKYVAL
                    is needed for accurate error budgeting.
+         skyalgorithm - set the algorithm by which the sky value is determined
+                  Valid options are 'sigmaclipping' or 'mmm'.
 
      RETURNS:
          mags   -  NAPER by NSTAR array giving the magnitude for each star in
@@ -205,7 +207,7 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                         (yc<0.5) | (yc>nrow-1.5), 1, 0 )
     if np.any( badstar ) :
         nbad = badstar.sum()
-        print('WARNING - ' + str(nbad) + ' star positions outside image')
+        print('WARNING [aper.py] - ' + str(nbad) + ' star positions outside image')
 
     if verbose :
         tloop = time.time()
@@ -267,11 +269,11 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                     break
 
                 skybuf = rotbuf[ sindex[0:nsky] ]
-                if skyisempty :
+                if skyalgorithm.startswith('sigmaclip'):
                     # The sky annulus is (nearly) empty of stars, (as in a diff image)
                     # so we can simply compute the sigma-clipped mean of all pixels in
                     # the annulus
-                    skybufclipped = sigmaclip( skybuf, low=4.0, high=4.0)
+                    skybufclipped,lothresh,hithresh = sigmaclip( skybuf, low=4.0, high=4.0)
                     skymod = np.mean( skybufclipped )
                     skysig = np.std( skybufclipped )
                     skyskw = skew( skybufclipped )
@@ -303,15 +305,14 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                 skyskw = 0
 
             for k in range(Naper): # Find pixels within each aperture
-                thisapd = array([])
                 if ( edge[i] >= apr[k] ):   #Does aperture extend outside the image?
                     if exact:
                         mask = zeros(ny[i]*nx[i])
 
                         x1,y1 = x1.reshape(ny[i]*nx[i]),y1.reshape(ny[i]*nx[i])
-                        good = where( ( x1 < smallrad[k] ) & (y1 < smallrad[k] ))[-1]
-                        Ngood = len(good)
-                        if Ngood > 0: mask[good] = 1
+                        igoodmag = where( ( x1 < smallrad[k] ) & (y1 < smallrad[k] ))[-1]
+                        Ngoodmag = len(igoodmag)
+                        if Ngoodmag > 0: mask[igoodmag] = 1
                         bad = where(  (x1 > bigrad[k]) | (y1 > bigrad[k] ))[-1]
                         mask[bad] = -1
 
@@ -345,10 +346,9 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                         fractn[gfract] = fractn[gfract]*factor
                 else:
                     if verbose :
-                        print("WARNING : aperture extends outside the image!")
+                        print("WARNING [aper.py]: aperture extends outside the image!")
                     continue
                     # END "if exact ...  else ..."
-
 
                 # Check for any bad pixel values (nan,inf) and those outside
                 # the user-specified range of valid pixel values.  If any
@@ -377,24 +377,27 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
                 apflux[k] = np.sum(thisapd*fractn)
             # END for loop over apertures
 
-            g = where(np.isfinite(apflux))[0]
-            Ng = len(g)
-            if Ng > 0:
+            igoodflux = where(np.isfinite(apflux))[0]
+            Ngoodflux = len(igoodflux)
+            if Ngoodflux > 0:
+                if verbose > 2 :
+                    print(" SRCFLUX   APFLUX    SKYMOD   AREA")
+                    for igf in igoodflux :
+                        print("%.4f   %.4f   %.4f   %.4f "%(apflux[igf]-skymod*area[igf],apflux[igf],skymod,area[igf]))
                 # Subtract sky from the integrated brightnesses
-                apflux[g] = apflux[g] - skymod*area[g]
+                apflux[igoodflux] = apflux[igoodflux] - skymod*area[igoodflux]
 
             # Compute flux error
-            error1[g] = area[g]*skyvar   #Scatter in sky values
-            error2[g] = where( apflux[g]>=0, apflux[g]/phpadu, 0 )  #Random photon noise
-            error3[g] = sigsq*area[g]**2  #Uncertainty in mean sky brightness
-            apfluxerr[g] = np.sqrt(error1[g] + error2[g] + error3[g])
+            error1[igoodflux] = area[igoodflux]*skyvar   #Scatter in sky values
+            error2[igoodflux] = np.abs(apflux[igoodflux])/phpadu  #Random photon noise
+            error3[igoodflux] = sigsq*area[igoodflux]**2  #Uncertainty in mean sky brightness
+            apfluxerr[igoodflux] = np.sqrt(error1[igoodflux] + error2[igoodflux] + error3[igoodflux])
 
-            good = where (apflux > 0.0)[0]  # Are there any valid integrated fluxes?
-            Ngood = len(good)
-     
-            if ( Ngood > 0 ) : # convert valid fluxes to mags
-                apmagerr[good] = 1.0857*apfluxerr[g]/apflux[g]   #1.0857 = log(10)/2.5
-                apmag[good] =  zeropoint-2.5*np.log10(apflux[g])
+            igoodmag = where (apflux > 0.0)[0]  # Are there any valid integrated fluxes?
+            Ngoodmag = len(igoodmag)
+            if ( Ngoodmag > 0 ) : # convert valid fluxes to mags
+                apmagerr[igoodmag] = 1.0857*apfluxerr[igoodmag]/apflux[igoodmag]   #1.0857 = log(10)/2.5
+                apmag[igoodmag] =  zeropoint-2.5*np.log10(apflux[igoodmag])
             break # Closing the 'while True' loop.
 
         # TODO : make a more informative output string
