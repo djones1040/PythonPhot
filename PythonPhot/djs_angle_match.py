@@ -23,7 +23,7 @@ CALLING SEQUENCE:
      ntot,mindx,mcount = djs_angle_match.djs_angle_match( raA, decA, raB, decB, dtheta=dtheta,
                                                           mmax=mmax, units=units )
      ntot,mindx,mcount,mdist = djs_angle_match.djs_angle_match( raA, decA, raB, decB, dtheta=dtheta,
-                                                                mmax=mmax, units=units, mdist=True )
+                                                                mmax=mmax, units=units, returnmdist=True )
 
  INPUTS:
    raA:        RA of first point(s) in radians/degrees/hours
@@ -86,7 +86,7 @@ def djs_angle_2match(raA, decA,
                      dtheta,
                      mmax=1, 
                      units='degrees',
-                     mdist=False):
+                     returnmdist=False):
 
    if units == "hrdeg":
       convRA = np.pi / 12.0
@@ -174,7 +174,7 @@ def djs_angle_2match(raA, decA,
    junk = np.where(mcount > 0)[0]
    ntot = len(junk)
 
-   if mdist:
+   if returnmdist:
       return(ntot,mindx,mcount,mdist)
    else:
       return(ntot,mindx,mcount)
@@ -184,16 +184,16 @@ def djs_angle_match(raA, decA, raB, decB,
                     dtheta, 
                     mmax = 1,
                     units = 'degrees',
-                    mdist = False):
+                    returnmdist = False):
    print('djs!')
    # Call with different RA,DEC
-   if mdist:
+   if returnmdist:
       ntot,mindx,mcount,mdist = djs_angle_2match( raA, decA, raB, decB, dtheta,
-                                                  mmax=mmax, units=units,mdist=mdist)
+                                                  mmax=mmax, units=units,returnmdist=returnmdist)
       return(ntot,mindx,mcount,mdist)
    else:
       ntot,mindx,mcount = djs_angle_2match( raA, decA, raB, decB, dtheta,
-                                            mmax=mmax, units=units,mdist=mdist)
+                                            mmax=mmax, units=units,returnmdist=returnmdist)
       return(ntot,mindx,mcount)
 
 #------------------------------------------------------------------------------
