@@ -154,7 +154,7 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
         if not np.iterable(setskyval) :
             setskyval = [setskyval,0.,1.]
         assert len(setskyval)==3, 'Keyword SETSKYVAL must contain 1 or 3 elements'
-        skyrad = [ 0., max(apr) + 1]
+        skyrad = [ 0., np.max(apr) + 1]    #use np.max (max function does not work on scalars)
     skyrad = asfarray(skyrad)
 
 
