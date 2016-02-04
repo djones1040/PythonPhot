@@ -105,6 +105,7 @@ REVISON HISTORY:
 
 import numpy as np
 from scipy.optimize import leastsq
+from scipy import linalg
 import dao_value
 from exceptions import RuntimeWarning
 
