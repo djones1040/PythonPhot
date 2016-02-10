@@ -6,7 +6,12 @@
 import numpy as np
 import daoerf, rinter, pkfit, pkfit_noise
 from scipy import linalg
-import pyfits
+
+try:
+    import pyfits
+except ImportError:
+    import astropy.io.fits as pyfits
+
 from make_2d import make_2d
 from rebin import rebin
 from daoerf import daoerf

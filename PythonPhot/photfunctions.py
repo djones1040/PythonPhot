@@ -11,7 +11,10 @@ the photometry routines (esp. useful for examining residuals after psf fitting)
 import os
 import exceptions
 import numpy as np
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    import astropy.io.fits as pyfits
 from aper import aper
 from cntrd import cntrd
 from pkfit_norecenter import pkfit_class

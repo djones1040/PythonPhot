@@ -4,7 +4,10 @@
 
 import numpy as np
 import dao_value
-import pyfits
+try:
+    import pyfits
+except ImportError:
+    import astropy.io.fits as pyfits
 
 def rdpsf(psfname):
     """Read the FITS file created by GETPSF in the DAOPHOT sequence
