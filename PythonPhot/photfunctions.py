@@ -330,7 +330,7 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
     # locate the target star center position
     x, y = xy
     if recenter_target:
-        x, y = cntrd(imagedat, x, y, psfradpix)
+        x, y = cntrd(imagedat, x, y, psfradpix, verbose=verbose)
         if x < 0 or y < 0:
             print("WARNING [photfunctions.py] : recentering failed")
             import pdb
@@ -389,7 +389,8 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
                     yt = int(yt) + np.random.random()
                     fakefluxaper, fakefluxpsf, fakecoord = add_and_recover(
                         imagedat, psfmodel, [xt, yt], fluxscale=psfflux,
-                        cleanup=True, psfradius=psfradpix, recenter=recenter_fakes)
+                        cleanup=True, psfradius=psfradpix, recenter=recenter_fakes,
+                        verbose=verbose)
                     if np.isfinite(fakefluxpsf):
                         fakecoordlist.append(fakecoord)
                         fakefluxlist.append(fakefluxpsf)
