@@ -51,7 +51,8 @@ def cntrd(img, x, y,
          Values for xcen and ycen will not be computed if the computed
          centroid falls outside of the box, or if the computed derivatives
          are non-decreasing.   If the centroid cannot be computed, then a 
-         message is displayed and xcen and ycen are set to -1.
+         xcen and ycen are set to -1 and (when verbose=True) a message is
+         displayed
     
     PROCEDURE:
          Maximum pixel within distance from input pixel X, Y  determined
@@ -87,52 +88,49 @@ def cntrd(img, x, y,
          Some errrors were returning X,Y = NaN rather than -1,-1        WL                     Aug, 2010
          Converted to Python                                            D. Jones               January, 2014
     """
-
-    
     sz_image = np.shape(img)
-
     xsize = sz_image[1]
     ysize = sz_image[0]
     # dtype = sz_image[3]              ;Datatype
 
-    #   Compute size of box needed to compute centroid
-
+    # Compute size of box needed to compute centroid
     if not extendbox: extendbox = 0
     nhalf =  int(0.637*fwhm)  
     if nhalf < 2: nhalf = 2
-    nbox = 2*nhalf+1             #Width of box to be used to compute centroid
+    nbox = 2*nhalf+1             # Width of box to be used to compute centroid
     nhalfbig = nhalf + extendbox
-    nbig = nbox + extendbox*2        #Extend box 3 pixels on each side to search for max pixel value
+    nbig = nbox + extendbox*2        #E xtend box 3 pixels on each side to search for max pixel value
     if isinstance(x,float) or isinstance(x,int): npts = 1
     else: npts = len(x) 
     if npts == 1: xcen = float(x) ; ycen = float(y)
     else: xcen = x.astype(float) ; ycen = y.astype(float)
-    ix = np.round( x )          #Central X pixel        ;Added 3/93
-    iy = np.round( y )          #Central Y pixel
+    ix = np.round( x )          # Central X pixel        ;Added 3/93
+    iy = np.round( y )          # Central Y pixel
     
-    if npts == 1: x,y,ix,iy,xcen,ycen = [x],[y],[ix],[iy],[xcen],[ycen]
-    for i in range(npts):        #Loop over X,Y vector
-        
+    if npts == 1:
+        x, y, ix, iy, xcen, ycen = [x], [y], [ix], [iy], [xcen], [ycen]
+    for i in range(npts):        # Loop over X,Y vector
         pos = str(x[i]) + ' ' + str(y[i])
-        
         if not keepcenter:
-            if ( (ix[i] < nhalfbig) or ((ix[i] + nhalfbig) > xsize-1) or \
-                     (iy[i] < nhalfbig) or ((iy[i] + nhalfbig) > ysize-1) ):
+            if ((ix[i] < nhalfbig) or ((ix[i] + nhalfbig) > xsize-1) or
+                (iy[i] < nhalfbig) or ((iy[i] + nhalfbig) > ysize-1)):
+                xcen[i] = -1
+                ycen[i] = -1
                 if verbose:
                     print('Position '+ pos + ' too near edge of image')
-                    xcen[i] = -1   ; ycen[i] = -1
-                    continue
+                continue
             
-            bigbox = img[int(iy[i]-nhalfbig) : int(iy[i]+nhalfbig+1), int(ix[i]-nhalfbig) : int(ix[i]+nhalfbig+1)]
+            bigbox = img[int(iy[i]-nhalfbig) : int(iy[i]+nhalfbig+1),
+                     int(ix[i]-nhalfbig) : int(ix[i]+nhalfbig+1)]
 
-            #  Locate maximum pixel in 'NBIG' sized subimage 
+            # Locate maximum pixel in 'NBIG' sized subimage
             goodrow = np.where(bigbox == bigbox)
             mx = np.max( bigbox[goodrow])     #Maximum pixel value in BIGBOX
-            mx_pos = np.where(bigbox.reshape(np.shape(bigbox)[0]*np.shape(bigbox)[1]) == mx)[0] #How many pixels have maximum value?
+            mx_pos = np.where(bigbox.reshape(np.shape(bigbox)[0] * np.shape(bigbox)[1]) == mx)[0] #How many pixels have maximum value?
             Nmax = len(mx_pos)
-            idx = mx_pos % nbig          #X coordinate of Max pixel
-            idy = mx_pos / nbig            #Y coordinate of Max pixel
-            if Nmax > 1:                 #More than 1 pixel at maximum?
+            idx = mx_pos % nbig          # X coordinate of Max pixel
+            idy = mx_pos / nbig          # Y coordinate of Max pixel
+            if Nmax > 1:                 # More than 1 pixel at maximum?
                 idx = np.round(np.sum(idx)/Nmax)
                 idy = np.round(np.sum(idy)/Nmax)
             else:
@@ -145,22 +143,18 @@ def cntrd(img, x, y,
             xmax = ix[i]
             ymax = iy[i]
 
-#; ---------------------------------------------------------------------
-#; check *new* center location for range
-#; added by Hogg
-
-        if ( (xmax < nhalf) or ((xmax + nhalf) > xsize-1) or \
-                 (ymax < nhalf) or ((ymax + nhalf) > ysize-1) ):
+        # check *new* center location for range (added by Hogg)
+        if ((xmax < nhalf) or ((xmax + nhalf) > xsize-1) or
+            (ymax < nhalf) or ((ymax + nhalf) > ysize-1)):
+            xcen[i] = -1
+            ycen[i] = -1
             if verbose:
                 print('Position '+ pos + ' moved too near edge of image')
-                xcen[i] = -1 ; ycen[i] = -1
-                continue
-#; ---------------------------------------------------------------------
-#
-#;  Extract smaller 'STRBOX' sized subimage centered on maximum pixel 
+            continue
 
+        # Extract smaller 'STRBOX' sized subimage centered on maximum pixel
         strbox = img[int(ymax-nhalf) : int(ymax+nhalf+1), int(xmax-nhalf) : int(xmax+nhalf+1)]
-# if (dtype NE 4) and (dtype NE 5) then strbox = float(strbox)
+        # if (dtype NE 4) and (dtype NE 5) then strbox = float(strbox)
 
         if debug:
             print('Subarray used to compute centroid:')
@@ -169,57 +163,55 @@ def cntrd(img, x, y,
         ir = (nhalf-1)
         if ir < 1: ir = 1
         dd = np.arange(nbox-1).astype(int) + 0.5 - nhalf
-    # Weighting factor W unity in center, 0.5 at end, and linear in between 
-        w = 1. - 0.5*(np.abs(dd)-0.5)/(nhalf-0.5) 
+
+        # Weighting factor W unity in center, 0.5 at end, and linear in between
+        w = 1. - 0.5*(np.abs(dd)-0.5)/(nhalf-0.5)
         sumc   = np.sum(w)
 
-    #; Find X centroid
+        # Find X centroid
         deriv = np.roll(strbox,-1,axis=1) - strbox    #;Shift in X & subtract to get derivative
         deriv = deriv[nhalf-ir:nhalf+ir+1,0:nbox-1] #;Don't want edges of the array
         deriv = np.sum( deriv, 0 )                    #    ;Sum X derivatives over Y direction
         sumd   = np.sum( w*deriv )
         sumxd  = np.sum( w*dd*deriv )
         sumxsq = np.sum( w*dd**2 )
-
         if sumxd >= 0:    # ;Reject if X derivative not decreasing
-   
-            if not verbose:
+            xcen[i]=-1
+            ycen[i]=-1
+            if verbose:
                 print('Unable to compute X centroid around position '+ pos)
-                xcen[i]=-1 ; ycen[i]=-1
-                continue
-
+            continue
         dx = sumxsq*sumd/(sumc*sumxd)
-        if ( np.abs(dx) > nhalf ):    #Reject if centroid outside box  
+        if np.abs(dx) > nhalf:    # Reject if centroid outside box
+            xcen[i]=-1
+            ycen[i]=-1
             if verbose:
                 print('Computed X centroid for position '+ pos + ' out of range')
-                xcen[i]=-1 ; ycen[i]=-1 
-                continue
+            continue
+        xcen[i] = xmax - dx    # X centroid in original array
 
-        xcen[i] = xmax - dx    #X centroid in original array
-
-#  Find Y Centroid
-
-        deriv = np.roll(strbox,-1,axis=0) - strbox    #;Shift in X & subtract to get derivative
+        #  Find Y Centroid
+        deriv = np.roll(strbox,-1,axis=0) - strbox    # Shift in X & subtract to get derivative
         deriv = deriv[0:nbox-1,nhalf-ir:nhalf+ir+1]
         deriv = np.sum( deriv,1 )
         sumd =   np.sum( w*deriv )
         sumxd =  np.sum( w*deriv*dd )
         sumxsq = np.sum( w*dd**2 )
-
-        if (sumxd >= 0):  #;Reject if Y derivative not decreasing
-            if not verbose:
+        if sumxd >= 0:  # Reject if Y derivative not decreasing
+            xcen[i] = -1
+            ycen[i] = -1
+            if verbose:
                 print('Unable to compute Y centroid around position '+ pos)
-                xcen[i] = -1 ; ycen[i] = -1
-                continue
-
+            continue
         dy = sumxsq*sumd/(sumc*sumxd)
-        if (np.abs(dy) > nhalf):  #Reject if computed Y centroid outside box
-            xcen[i]=-1 ; ycen[i]=-1
+        if np.abs(dy) > nhalf:  # Reject if computed Y centroid outside box
+            xcen[i]=-1
+            ycen[i]=-1
             if verbose:
                 print('Computed Y centroid for position '+ pos + ' out of range')
-                continue
- 
+            continue
         ycen[i] = ymax-dy
 
-    if npts == 1: xcen,ycen = xcen[0],ycen[0]
+    if npts == 1:
+        xcen,ycen = xcen[0],ycen[0]
     return(xcen,ycen)
