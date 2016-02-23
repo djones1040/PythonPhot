@@ -124,8 +124,8 @@ def find(image,
     row2 = (np.arange(nbox)-nhalf)**2
 
     for i in range(nhalf+1):
-	temp = row2 + i**2
-	g[nhalf-i,:] = temp         
+        temp = row2 + i**2
+        g[nhalf-i,:] = temp         
         g[nhalf+i,:] = temp
 
     g_row = np.where(g <= radsq)
