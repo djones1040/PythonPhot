@@ -209,9 +209,9 @@ def getpsf(image,xc,yc,
         c = np.zeros([5,5])
         #                            Print the current star
             
-        print 'STAR  X  Y  MAG  SKY'
-        print istar, xc[istar], yc[istar], mag[istar], sky[istar]
-        print ''
+        print('STAR  X  Y  MAG  SKY')
+        print(istar, xc[istar], yc[istar], mag[istar], sky[istar])
+        print('')
 
         if debug: print('GETPSF: Gaussian Fit Iteration')
 
@@ -330,9 +330,9 @@ def getpsf(image,xc,yc,
             print('GETPSF: Star ',str(istar),' too near edge of frame.')
             continue    
 
-        print 'STAR  X  Y  MAG  SKY'
-        print istar, xc[istar], yc[istar], mag[istar], sky[istar]
-        print ''
+        print('STAR  X  Y  MAG  SKY')
+        print(istar, xc[istar], yc[istar], mag[istar], sky[istar])
+        print('')
 
         f = image[ly:uy+1,lx:ux+1]
         x = xc[istar]-lx   ;   y = yc[istar]-ly   

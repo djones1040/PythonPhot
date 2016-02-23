@@ -385,7 +385,7 @@ def find(image,
 
     if doprint:
         print >> fout,'     STAR       X       Y     FLUX     SHARP    ROUND'
-	for i in range(nstar+1):
+        for i in range(nstar+1):
             print >> fout,i+1, x[i], y[i], flux[i], sharp[i], roundness[i]
 
 # FINISH:
