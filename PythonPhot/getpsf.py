@@ -4,7 +4,7 @@
 
 
 import numpy as np
-import daoerf, rinter, pkfit, pkfit_noise
+from . import daoerf, rinter, pkfit, pkfit_noise
 from scipy import linalg
 
 try:

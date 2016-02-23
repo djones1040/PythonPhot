@@ -2,8 +2,8 @@
 # D. Jones - 2/13/14
 """This code is from the IDL Astronomy Users Library"""
 import numpy as np
-import daoerf
-import rinter
+from . import daoerf
+from . import rinter
 min,max,shape = np.min,np.max,np.shape
 
 def dao_value(xx,yy,gauss,psf,deriv=True):

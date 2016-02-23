@@ -18,8 +18,8 @@ mag,magerr,flux,fluxerr,sky,skyerr,badflag,outstr = \
 
 import numpy as np
 from scipy.stats import sigmaclip, skew
-import pixwt
-import mmm
+from . import pixwt
+from . import mmm
 where,asfarray,asarray,array,zeros,arange = np.where,np.asfarray,np.asarray,np.array,np.zeros,np.arange
 
 def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
