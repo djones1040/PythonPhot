@@ -224,14 +224,14 @@ def find(image,
         hy = index[0]+yy[i]; hx = index[1]+xx[i]
         hgood = np.where((hy < n_y) & (hx < n_x) & (hy >= 0) & (hx >= 0))[0]
 
-	stars = np.where (np.greater_equal(h[index[0][hgood],index[1][hgood]],h[hy[hgood],hx[hgood]]))
+        stars = np.where (np.greater_equal(h[index[0][hgood],index[1][hgood]],h[hy[hgood],hx[hgood]]))
 
         nfound = len(stars)
         if nfound == 0:  #Do valid local maxima exist?
              print('ERROR - No maxima exceed input threshold of ',hmin)
              return
 
-	index = np.array([index[0][hgood][stars],index[1][hgood][stars]])
+        index = np.array([index[0][hgood][stars],index[1][hgood][stars]])
 
  
     ix = index[1] # % n_x              #X index of local maxima
