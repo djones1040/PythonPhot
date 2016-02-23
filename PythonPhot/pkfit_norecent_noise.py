@@ -107,7 +107,7 @@ REVISON HISTORY:
 
 import numpy as np
 from scipy import linalg
-import dao_value
+from . import dao_value
 
 sqrt,where,abs,shape,zeros,array,isnan,\
     arange,matrix,exp,sum,isinf,median,ones,bool = \
