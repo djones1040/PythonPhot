@@ -107,7 +107,6 @@ import numpy as np
 from scipy.optimize import leastsq
 from scipy import linalg
 import dao_value
-from exceptions import RuntimeWarning
 
 sqrt, where, abs, shape, zeros, array, isnan, \
 arange, matrix, exp, sum, isinf, median, ones, bool = \

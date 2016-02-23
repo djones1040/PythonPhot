@@ -79,7 +79,6 @@ CALLING SEQUENCE:
 """
 
 import numpy as np
-import exceptions
 
 def djs_angle_2match(raA, decA, 
                      raB, decB, 

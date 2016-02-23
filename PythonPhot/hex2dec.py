@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 #D. Jones - 1/14/14
 
-import exceptions
-
 def hex2dec(inp,verbose=True):
     """This code has been converted from the IDL source code
     at http://www.astro.washington.edu/docs/idl/cgi-bin/getpro/library32.html?HEX2DEC
