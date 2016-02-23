@@ -2,7 +2,7 @@
 # D. Jones - 2/13/14
 
 import numpy as np
-import rebin
+from . import rebin
 
 def make_2d(x,y):
     """Change from 1-d indexing to 2-d indexing

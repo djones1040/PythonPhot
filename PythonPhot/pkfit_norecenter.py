@@ -106,7 +106,7 @@ REVISON HISTORY:
 import numpy as np
 from scipy.optimize import leastsq
 from scipy import linalg
-import dao_value
+from . import dao_value
 
 sqrt, where, abs, shape, zeros, array, isnan, \
 arange, matrix, exp, sum, isinf, median, ones, bool = \
@@ -626,7 +626,7 @@ class pkfit_class:
                 redo = 1
 
             if debug:
-                print niter, x, y, scale, errmag, chiold, sharp
+                print(niter, x, y, scale, errmag, chiold, sharp)
 
             if niter >= 3:
                 loop = False  # At least 3 iterations required

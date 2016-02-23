@@ -219,8 +219,6 @@ class pkfit_class:
 
             if not len(good[0]):
                 # D. Jones - modified from Scolnic
-                print 'good', good[0]
-                print 'Return1'
                 scale=1000000.0;
                 errmag=100000
                 chi=100000
@@ -239,7 +237,6 @@ class pkfit_class:
 
         # D. Jones - modified from Scolnic
             if len(dvdx) == 0:
-                print 'Return2'
                 scale=1000000.0
                 errmag=100000
                 chi=100000
@@ -328,7 +325,6 @@ class pkfit_class:
                 # sbd=shape(badpix)
                 # sdf=shape(df)
                 if len(badpix) == len(df):
-                    print('Return3')
                     scale=1000000.0
                     errmag=100000
                     chi=100000
@@ -483,7 +479,7 @@ class pkfit_class:
             if ( adt[0] > 0.05*errmag) or (adt[0] > 0.001*scale): redo = 1
             if (adt[1] > 0.01) or (adt[2] > 0.01): redo = 1
 
-            if debug: print niter,x,y,scale,errmag,chiold,sharp
+            if debug: print(niter,x,y,scale,errmag,chiold,sharp)
 
             if niter >= 3: loop=False        #At least 3 iterations required
             
