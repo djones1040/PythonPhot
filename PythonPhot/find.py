@@ -7,8 +7,8 @@ from scipy.ndimage.filters import convolve
 
 def find(image,
          hmin, fwhm, 
-         roundlim, 
-         sharplim,
+         roundlim=[0.2,1.0], 
+         sharplim=[-1.0,1.0],
          doprint = False, 
          verbose = True):
     """Find positive brightness perturbations (i.e stars) in an image.
