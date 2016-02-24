@@ -7,8 +7,8 @@ from scipy.ndimage.filters import convolve
 
 def find(image,
          hmin, fwhm, 
-         roundlim=[0.2,1.0], 
-         sharplim=[-1.0,1.0],
+         roundlim=[-1.0,1.0], 
+         sharplim=[0.2,1.0],
          doprint = False, 
          verbose = True):
     """Find positive brightness perturbations (i.e stars) in an image.
@@ -30,7 +30,7 @@ def find(image,
     	 fwhm  -    FWHM (in pixels) to be used in the convolve filter
     	 sharplim - 2 element vector giving low and high cutoff for the
     		     sharpness statistic (Default: [0.2,1.0] ).   Change this
-    		     default only if the stars have significantly larger or 
+    		     default only if the stars have significantly larger
     		     or smaller concentration than a Gaussian
     	 roundlim - 2 element vector giving low and high cutoff for the
     		     roundness statistic (Default: [-1.0,1.0] ).   Change this 
