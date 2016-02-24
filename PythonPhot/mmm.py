@@ -118,7 +118,7 @@ def mmm( sky_vector,
 
     sky = np.sort(sky_vector)    #Sort SKY in ascending values
 
-    skymid = 0.5*sky[(nsky-1)/2] + 0.5*sky[nsky/2]  #Median value of all sky values
+    skymid = 0.5*sky[int((nsky-1)/2)] + 0.5*sky[int(nsky/2)]  #Median value of all sky values
        
     cut1 = np.min( [skymid-sky[0],sky[nsky-1] - skymid] ) 
     if highbad: 
