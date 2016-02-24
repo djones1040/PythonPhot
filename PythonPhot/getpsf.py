@@ -16,7 +16,7 @@ def getpsf(image,xc,yc,
            apmag,sky,ronois,
            phpadu,idpsf,psfrad,
            fitrad,psfname, zeropoint=0,
-           debug = False):
+           debug = False,verbose=True):
     """Generates a point-spread function (PSF) from observed stars. 
 
     The PSF is represented as a 2-dimensional Gaussian
@@ -201,10 +201,11 @@ def getpsf(image,xc,yc,
         v = np.zeros(5)
         c = np.zeros([5,5])
         #                            Print the current star
-            
-        print('STAR  X  Y  MAG  SKY')
-        print(istar, xc[istar], yc[istar], mag[istar], sky[istar])
-        print('')
+
+        if verbose:
+            print('STAR  X  Y  MAG  SKY')
+            print(istar, xc[istar], yc[istar], mag[istar], sky[istar])
+            print('')
 
         if debug: print('GETPSF: Gaussian Fit Iteration')
 
