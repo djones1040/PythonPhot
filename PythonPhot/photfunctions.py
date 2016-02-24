@@ -18,7 +18,7 @@ from .aper import aper
 from .cntrd import cntrd
 from .pkfit_norecenter import pkfit_class
 from .dao_value import dao_value
-from .scipy.optimize import curve_fit
+from scipy.optimize import curve_fit
 from astropy.stats import sigma_clipped_stats
 
 def mkpsfimage(psfmodel, x, y, size, fluxscale=1):
