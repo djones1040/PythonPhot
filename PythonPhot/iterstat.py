@@ -33,6 +33,6 @@ def iterstat(d,startMedian=False,sigmaclip=3.0,
 
         md=np.mean(img[gd])
         n = float(len(gd[0]))
-	std = np.sqrt(np.sum((img[gd]-md)**2.)/(n-1.))
+        std = np.sqrt(np.sum((img[gd]-md)**2.)/(n-1.))
 
     return(md,std)
