@@ -408,6 +408,8 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
                       "recovery.")
             psfflux_poissonerr = (poissonErr(psfflux * exptime, confidence=1) /
                                   exptime)
+            if not np.isfinite(psfflux_poissonerr):
+                psfflux_poissonerr = 0
             # Total flux error is the quadratic sum of the poisson noise with
             # the systematic (shift) and statistical (dispersion) errors
             # inferred from fake psf planting and recovery
@@ -439,9 +441,12 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
             apflux_poissonerr = np.array(
                 [poissonErr(fap * exptime, confidence=1) / exptime
                  for fap in apflux])
+            apflux_poissonerr[np.isfinite(apflux_poissonerr)==False] = 0
         else:
             apflux_poissonerr = (poissonErr(apflux * exptime, confidence=1) /
                                  exptime)
+            if not np.isfinite(apflux_poissonerr):
+                apflux_poissonerr = 0
         apfluxerr = np.sqrt(apflux_poissonerr**2 +
                             emptyapbias**2 + emptyapsigma**2)
 
