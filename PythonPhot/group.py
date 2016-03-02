@@ -4,7 +4,6 @@
 
 import numpy as np
 from numpy import where,append,array
-import exceptions
 
 def group( x, y, rcrit):
     """Assign stars with non-overlapping PSF profiles into distinct groups
@@ -50,7 +49,7 @@ def group( x, y, rcrit):
     npts = min( [len(x), len(y)] )    #Number of stars
 
     if npts < 2:
-        raise exceptions.RuntimeError('ERROR - Input position X,Y vectors must contain at least 2 points')
+        raise RuntimeError('ERROR - Input position X,Y vectors must contain at least 2 points')
 
     x = 1.0*x  ;  y = 1.0*y   #Make sure at least floating point
     ngroup =  np.arange(npts)   #Initially each star in a separate group

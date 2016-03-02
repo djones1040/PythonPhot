@@ -4,7 +4,7 @@
 
 
 import numpy as np
-import daoerf, rinter, pkfit, pkfit_noise
+from . import make_2d,daoerf, rinter, pkfit, pkfit_noise
 from scipy import linalg
 
 try:
@@ -12,18 +12,11 @@ try:
 except ImportError:
     import astropy.io.fits as pyfits
 
-from make_2d import make_2d
-from rebin import rebin
-from daoerf import daoerf
-from rinter import rinter
-import pkfit
-import pkfit_noise
-
 def getpsf(image,xc,yc,
            apmag,sky,ronois,
            phpadu,idpsf,psfrad,
            fitrad,psfname, zeropoint=0,
-           debug = False):
+           debug = False,verbose=True):
     """Generates a point-spread function (PSF) from observed stars. 
 
     The PSF is represented as a 2-dimensional Gaussian
@@ -157,7 +150,7 @@ def getpsf(image,xc,yc,
         print('        Stellar IDs: ',idpsf)   ; print(' ')
 
     boxgen = np.arange(nbox)
-    xgen,ygen = make_2d( boxgen, boxgen)
+    xgen,ygen = make_2d.make_2d( boxgen, boxgen)
 
     #               Find the first PSF star in the star list.
     nstrps = -1	#Counter for number of stars used to create PSF
@@ -208,10 +201,11 @@ def getpsf(image,xc,yc,
         v = np.zeros(5)
         c = np.zeros([5,5])
         #                            Print the current star
-            
-        print 'STAR  X  Y  MAG  SKY'
-        print istar, xc[istar], yc[istar], mag[istar], sky[istar]
-        print ''
+
+        if verbose:
+            print('STAR  X  Y  MAG  SKY')
+            print(istar, xc[istar], yc[istar], mag[istar], sky[istar])
+            print('')
 
         if debug: print('GETPSF: Gaussian Fit Iteration')
 
@@ -239,8 +233,8 @@ def getpsf(image,xc,yc,
             xin = (np.arange(2*nx+1)-nx) + ix
             yin = (np.arange(2*ny+1)-ny) + iy
 
-            xin,yin = make_2d( xin, yin)
-            g,t = daoerf(xin, yin, a)
+            xin,yin = make_2d.make_2d( xin, yin)
+            g,t = daoerf.daoerf(xin, yin, a)
             
             #  The T's are the first derivatives of the model profile with respect
             #  to the five fitting parameters H, DXCEN, DYCEN, SIGX, and SIGY.
@@ -278,7 +272,7 @@ def getpsf(image,xc,yc,
         #  and the best-fitting Gaussian analytic profile.
 
         a = np.array([h, x+dxcen, y+dycen, sigx,sigy])  #Parameters for Gaussian fit
-        g,pder2 = daoerf(xgen,ygen,a)                  #Compute Gaussian
+        g,pder2 = daoerf.daoerf(xgen,ygen,a)                  #Compute Gaussian
         f = f - g.reshape(np.shape(f)[0],np.shape(f)[1])                             #Residuals (Real profile - Gaussian)
 
         psfmag = mag[istar]
@@ -292,8 +286,8 @@ def getpsf(image,xc,yc,
         ncen = (npsf-1)/2.
         psfgen = (np.arange(npsf) - ncen)/2.         #Index function for PSF array
         yy = psfgen + y   ;  xx = psfgen + x
-        xx,yy = make_2d(xx,yy)
-        psf = rinter(f, xx, yy, deriv=False )            #Interpolate residuals onto current star
+        xx,yy = make_2d.make_2d(xx,yy)
+        psf = rinter.rinter(f, xx, yy, deriv=False )            #Interpolate residuals onto current star
 
         gauss = np.array([h,dxcen,dycen,sigx,sigy])
         goodstar = nstrps                   #Index of first good star
@@ -330,9 +324,9 @@ def getpsf(image,xc,yc,
             print('GETPSF: Star ',str(istar),' too near edge of frame.')
             continue    
 
-        print 'STAR  X  Y  MAG  SKY'
-        print istar, xc[istar], yc[istar], mag[istar], sky[istar]
-        print ''
+        print('STAR  X  Y  MAG  SKY')
+        print(istar, xc[istar], yc[istar], mag[istar], sky[istar])
+        print('')
 
         f = image[ly:uy+1,lx:ux+1]
         x = xc[istar]-lx   ;   y = yc[istar]-ly   
@@ -348,7 +342,7 @@ def getpsf(image,xc,yc,
             continue
 
         a = np.array([gauss[0], x+dxcen,y+dycen,sigx,sigy])  #Parameters of successful fit
-        e,pder2 = daoerf(xgen,ygen,a)
+        e,pder2 = daoerf.daoerf(xgen,ygen,a)
         f = f - scale*e.reshape(np.shape(f)[0],np.shape(f)[1]) -sky[istar]	           #Compute array of residuals
 
         # Values of the array of residuals are now interpolated to an NPSF by
@@ -358,8 +352,8 @@ def getpsf(image,xc,yc,
 
         xx = psfgen + x
         yy = psfgen + y 
-        xx,yy = make_2d(xx,yy)
-        psftemp = rinter(f,xx,yy,deriv=False)
+        xx,yy = make_2d.make_2d(xx,yy)
+        psftemp = rinter.rinter(f,xx,yy,deriv=False)
 
         # deal with bad pixels
         nanrow = np.where(psftemp != psftemp)

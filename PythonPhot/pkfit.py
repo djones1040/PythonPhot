@@ -13,23 +13,28 @@ CALLING SEQUENCE:
      errmag,chi,sharp,niter,scale,xnew,ynew = pk.pkfit(scale,x,y,sky,radius)
 
 PKFIT CLASS INPUTS:
-     f       - NX by NY array containing actual picture data.
-     ronois  - readout noise per pixel, scalar
-     phpadu  - photons per analog digital unit, scalar
-     gauss   - vector containing the values of the five parameters defining
-                the analytic Gaussian which approximates the core of the PSF.
-     psf     - an NPSF by NPSF look-up table containing corrections from
-                the Gaussian approximation of the PSF to the true PSF.
+     f           - NX by NY array containing actual picture data.
+     ronois      - readout noise per pixel, scalar
+     phpadu      - photons per analog digital unit, scalar
+     gauss       - vector containing the values of the five parameters defining
+                    the analytic Gaussian which approximates the core of the PSF.
+     psf         - an NPSF by NPSF look-up table containing corrections from
+                    the Gaussian approximation of the PSF to the true PSF.
+     noise_image - if given, the noise image corresponding to f
+     mask_image  - if given, the mask image corresponding to f.  Masked pixels are not used.
      
 PKFIT FUNCTION INPUTS:
-     x, y    - the initial estimates of the centroid of the star relative
-                to the corner (0,0) of the subarray.  Upon return, the
-                final computed values of X and Y will be passed back to the
-                calling routine.
-     sky     - the local sky brightness value, as obtained from APER
-     radius  - the fitting radius-- only pixels within RADIUS of the
-                instantaneous estimate of the star's centroid will be
-                included in the fit, scalar
+     x, y     - the initial estimates of the centroid of the star relative
+                 to the corner (0,0) of the subarray.  Upon return, the
+                 final computed values of X and Y will be passed back to the
+                 calling routine.
+     sky      - the local sky brightness value, as obtained from APER
+     radius   - the fitting radius-- only pixels within RADIUS of the
+                 instantaneous estimate of the star's centroid will be
+                 included in the fit, scalar
+     recenter - if set to False, the PSF center is fixed to the input
+                 coordinates given.  Otherwise, the PSF center is fit to
+                 the star.  Default = True.
 
 OPTIONAL PKFIT FUNCTION INPUTS:
      xyout   - if True, return new x and y positions
@@ -102,7 +107,7 @@ REVISON HISTORY:
 
 import numpy as np
 from scipy import linalg
-import dao_value
+from . import dao_value
 
 sqrt,where,abs,shape,zeros,array,isnan,\
     arange,matrix,exp,sum,isinf,median,ones,bool = \
@@ -114,18 +119,23 @@ sqrt,where,abs,shape,zeros,array,isnan,\
 class pkfit_class:
 
     def __init__(self,image,gauss,psf,
-                 ronois,phpadu):
+                 ronois,phpadu,noiseim=None,
+                 maskim=None):
         self.f = image
         self.gauss = gauss
         self.psf = psf
         self.ronois = ronois
         self.phpadu = phpadu
-        
+        self.fnoise = noiseim
+        self.fmask = maskim
+
     def pkfit(self,scale,x,y,sky,radius,
               debug=False,
               xyout=False,
-              maxiter=25):
+              maxiter=25,
+              recenter=True):
         f = self.f; gauss = self.gauss; psf = self.psf
+        fnoise = self.fnoise; fmask = self.fmask
 
         if f.dtype != 'float64': f = f.astype('float64')
 #        psf1d = psf.reshape(shape(psf)[0]**2.)
@@ -190,6 +200,10 @@ class pkfit_class:
             # a look-up table.
 
             good = where(rsq < 1.)
+            if fnoise:
+                good = good[where(fnoise[iylo:iyhi+1,ixlo:ixhi+1] > 0)]
+            if fmask:
+                good = good[where(fmask[iylo:iyhi+1,ixlo:ixhi+1] == 0)]
 
             ngood = len(good[0])
             if ngood < 1: ngood = 1
@@ -234,6 +248,13 @@ class pkfit_class:
             fsub = f[iylo:iyhi+1,ixlo:ixhi+1]
 
             fsub = fsub[good[0],good[1]]
+            if fnoise:
+                # D. Jones - noise addition from Scolnic
+                fsubnoise=fnoise[iylo:iyhi+1,ixlo:ixhi+1]
+                fsubnoise = fsubnoise[good[0],good[1]]
+                sig=fsubnoise[:]
+                sigsq = fsubnoise**2.                             
+
             rsq = rsq[good[0],good[1]]
             # Scolnic Added!!!
             #
@@ -256,12 +277,12 @@ class pkfit_class:
             # error to this quantity is estimated from a good-seeing CTIO frame to
             # be approximately 0.027 (see definition of PKERR above.)
         
-            fpos = (fsub-df)   #Raw data - residual = model predicted intensity
-            fposrow = where(fpos < 0.)[0]
-            if len(fposrow): fpos[fposrow] = 0
-            sigsq = fpos/self.phpadu + self.ronois + (0.0075*fpos)**2 + (pkerr*(fpos-skys))**2
-
-            sig = sqrt(sigsq)
+            if not fnoise:
+                fpos = (fsub-df)   #Raw data - residual = model predicted intensity
+                fposrow = where(fpos < 0.)[0]
+                if len(fposrow): fpos[fposrow] = 0
+                sigsq = fpos/self.phpadu + self.ronois + (0.0075*fpos)**2 + (pkerr*(fpos-skys))**2
+                sig = sqrt(sigsq)
             relerr = df/sig
         
             # SIG is the anticipated standard error of the intensity
@@ -290,6 +311,8 @@ class pkfit_class:
 
                 if nbad > 0:
                     fsub = item_remove(badpix, fsub)
+                    if fnoise:
+                        fsubnoise = item_remove(badpix, fsubnoise)
                     df = item_remove(badpix,df)
                     sigsq = item_remove(badpix,sigsq)
                     sig = item_remove(badpix,sig)
@@ -313,14 +336,17 @@ class pkfit_class:
 
             rhosq[lilrho] = 0.5*rhosq[lilrho]
             dfdsig = exp(-rhosq[lilrho])*(rhosq[lilrho]-1.)
-            fpos = fsub[lilrho]
-            fposrow = where(fsub[lilrho]-sky < 0.)[0]
-            fpos[fposrow] = sky
 
-            # FPOS-SKY = raw data minus sky = estimated value of the stellar
-            # intensity (which presumably is non-negative).
+            if not fnoise:
+                # FPOS-SKY = raw data minus sky = estimated value of the stellar
+                # intensity (which presumably is non-negative).
+                fpos = fsub[lilrho]
+                fposrow = where(fsub[lilrho]-sky < 0.)[0]
+                fpos[fposrow] = sky
+                sig  = fpos/self.phpadu + self.ronois + (0.0075*fpos)**2 + (pkerr*(fpos-sky))**2
+            else:
+                sig = fsubnoise[lilrho[0]]**2.
 
-            sig  = fpos/self.phpadu + self.ronois + (0.0075*fpos)**2 + (pkerr*(fpos-sky))**2
             numer = sum(dfdsig*df[0:len(lilrho)]/sig)
             denom = sum(dfdsig**2/sig)
         
@@ -400,8 +426,9 @@ class pkfit_class:
             denom2 = ( dt[0]/(5.25*scale))
             if denom2 < (-1*dt[0]/(0.84*scale)): denom2 = (-1*dt[0]/(0.84*scale))
             scale = scale+dt[0]/(1 + denom2/clamp[0])
-            x = x + dt[1]/(1.+adt[1]/(0.5*clamp[1]))
-            y = y + dt[2]/(1.+adt[2]/(0.5*clamp[2]))
+            if recenter:
+                x = x + dt[1]/(1.+adt[1]/(0.5*clamp[1]))
+                y = y + dt[2]/(1.+adt[2]/(0.5*clamp[2]))
             redo = 0
 
             # Convergence criteria:  if the most recent computed correction to the
@@ -414,7 +441,7 @@ class pkfit_class:
             if ( adt[0] > max(0.05*errmag,0.001*scale)): redo = 1
             if (adt[1] > 0.01) or (adt[2] > 0.01): redo = 1
 
-            if debug: print niter,x,y,scale,errmag,chiold,sharp
+            if debug: print(niter,x,y,scale,errmag,chiold,sharp)
         
             if niter >= 3: loop=False        #At least 3 iterations required
 

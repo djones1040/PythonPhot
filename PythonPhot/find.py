@@ -7,8 +7,8 @@ from scipy.ndimage.filters import convolve
 
 def find(image,
          hmin, fwhm, 
-         roundlim, 
-         sharplim,
+         roundlim=[-1.0,1.0], 
+         sharplim=[0.2,1.0],
          doprint = False, 
          verbose = True):
     """Find positive brightness perturbations (i.e stars) in an image.
@@ -30,7 +30,7 @@ def find(image,
     	 fwhm  -    FWHM (in pixels) to be used in the convolve filter
     	 sharplim - 2 element vector giving low and high cutoff for the
     		     sharpness statistic (Default: [0.2,1.0] ).   Change this
-    		     default only if the stars have significantly larger or 
+    		     default only if the stars have significantly larger
     		     or smaller concentration than a Gaussian
     	 roundlim - 2 element vector giving low and high cutoff for the
     		     roundness statistic (Default: [-1.0,1.0] ).   Change this 
@@ -124,8 +124,8 @@ def find(image,
     row2 = (np.arange(nbox)-nhalf)**2
 
     for i in range(nhalf+1):
-	temp = row2 + i**2
-	g[nhalf-i,:] = temp         
+        temp = row2 + i**2
+        g[nhalf-i,:] = temp         
         g[nhalf+i,:] = temp
 
     g_row = np.where(g <= radsq)
@@ -224,14 +224,14 @@ def find(image,
         hy = index[0]+yy[i]; hx = index[1]+xx[i]
         hgood = np.where((hy < n_y) & (hx < n_x) & (hy >= 0) & (hx >= 0))[0]
 
-	stars = np.where (np.greater_equal(h[index[0][hgood],index[1][hgood]],h[hy[hgood],hx[hgood]]))
+        stars = np.where (np.greater_equal(h[index[0][hgood],index[1][hgood]],h[hy[hgood],hx[hgood]]))
 
         nfound = len(stars)
         if nfound == 0:  #Do valid local maxima exist?
              print('ERROR - No maxima exceed input threshold of ',hmin)
              return
 
-	index = np.array([index[0][hgood][stars],index[1][hgood][stars]])
+        index = np.array([index[0][hgood][stars],index[1][hgood][stars]])
 
  
     ix = index[1] # % n_x              #X index of local maxima
@@ -385,7 +385,7 @@ def find(image,
 
     if doprint:
         print >> fout,'     STAR       X       Y     FLUX     SHARP    ROUND'
-	for i in range(nstar+1):
+        for i in range(nstar+1):
             print >> fout,i+1, x[i], y[i], flux[i], sharp[i], roundness[i]
 
 # FINISH:

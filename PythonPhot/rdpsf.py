@@ -3,7 +3,7 @@
 """This code is from the IDL Astronomy Users Library"""
 
 import numpy as np
-import dao_value
+from . import dao_value
 try:
     import pyfits
 except ImportError:

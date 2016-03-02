@@ -106,7 +106,7 @@ REVISON HISTORY:
 import numpy as np
 from numpy import sqrt
 from scipy import linalg
-import dao_value
+from . import dao_value
 
 sqrt,where,abs,shape,zeros,array,isnan,\
     arange,matrix,exp,sum,isinf,median,ones,bool = \
@@ -445,7 +445,7 @@ class pkfit_class:
             if ( adt[0] > 0.05*errmag) or (adt[0] > 0.001*scale): redo = 1
             if (adt[1] > 0.01) or (adt[2] > 0.01): redo = 1
 
-            if debug: print niter,x,y,scale,errmag,chiold,sharp
+            if debug: print(niter,x,y,scale,errmag,chiold,sharp)
         
             if niter >= 3: loop=False        #At least 3 iterations required
 

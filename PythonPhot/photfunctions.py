@@ -9,16 +9,15 @@ Also includes functions for displaying images before, during and after applying
 the photometry routines (esp. useful for examining residuals after psf fitting)
 """
 import os
-import exceptions
 import numpy as np
 try:
     import pyfits
 except ImportError:
     import astropy.io.fits as pyfits
-from aper import aper
-from cntrd import cntrd
-from pkfit_norecenter import pkfit_class
-from dao_value import dao_value
+from .aper import aper
+from .cntrd import cntrd
+from .pkfit_norecenter import pkfit_class
+from .dao_value import dao_value
 from scipy.optimize import curve_fit
 from astropy.stats import sigma_clipped_stats
 
@@ -91,7 +90,7 @@ def rdpsfmodel(psfmodelfile):
         assert len(psfmodelfile) == 4
         gaussparam, lookuptable, psfmag, psfzpt = psfmodelfile
     else:
-        raise exceptions.RuntimeError(
+        raise RuntimeError(
             "psfmodel must either be a filename or a 4-tuple giving:"
             "[gaussian parameters, look-up table, psf mag, zpt]")
     return gaussparam, lookuptable, psfmag, psfzpt
