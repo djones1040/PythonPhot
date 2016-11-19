@@ -36,6 +36,7 @@ def cntrd(img, x, y,
                        a half width equal to 1.5 sigma  = 0.637* FWHM to find the
                        maximum pixel.    To search a larger area, set extendbox to
                        the number of pixels to enlarge the half-width of the box.
+                       A list/array of two coordinates defines a rectangle.
                        Default is 0; prior to June 2004, the default was extendbox = 3
                        keepcenter - By default, CNTRD finds the maximum pixel in a box
                        centered on the input X,Y coordinates, and then extracts a new
@@ -98,8 +99,13 @@ def cntrd(img, x, y,
     nhalf =  int(0.637*fwhm)  
     if nhalf < 2: nhalf = 2
     nbox = 2*nhalf+1             # Width of box to be used to compute centroid
-    nhalfbig = nhalf + extendbox
-    nbig = nbox + extendbox*2        #E xtend box 3 pixels on each side to search for max pixel value
+    if not hasattr(extendbox,'__len__'):
+        Xextendbox,Yextendbox = extendbox,extendbox
+    elif hasattr(extendbox,'__len__'):
+        Xextendbox,Yextendbox = extendbox
+    nhalfbigx = nhalf + Xextendbox; nhalfbigy = nhalf + Yextendbox
+    nbigx = nbox + Xextendbox*2; nbigy = nbox + Yextendbox*2 #Extend box 3 pixels on each side to search for max pixel value
+
     if isinstance(x,float) or isinstance(x,int): npts = 1
     else: npts = len(x) 
     if npts == 1: xcen = float(x) ; ycen = float(y)
@@ -112,24 +118,26 @@ def cntrd(img, x, y,
     for i in range(npts):        # Loop over X,Y vector
         pos = str(x[i]) + ' ' + str(y[i])
         if not keepcenter:
-            if ((ix[i] < nhalfbig) or ((ix[i] + nhalfbig) > xsize-1) or
-                (iy[i] < nhalfbig) or ((iy[i] + nhalfbig) > ysize-1)):
+            if ((ix[i] < nhalfbigx) or ((ix[i] + nhalfbigx) > xsize-1) or
+                (iy[i] < nhalfbigy) or ((iy[i] + nhalfbigy) > ysize-1)):
                 xcen[i] = -1
                 ycen[i] = -1
                 if verbose:
                     print('Position '+ pos + ' too near edge of image')
                 continue
             
-            bigbox = img[int(iy[i]-nhalfbig) : int(iy[i]+nhalfbig+1),
-                     int(ix[i]-nhalfbig) : int(ix[i]+nhalfbig+1)]
+            bigbox = img[int(iy[i]-nhalfbigy) : int(iy[i]+nhalfbigy+1),
+                     int(ix[i]-nhalfbigx) : int(ix[i]+nhalfbigx+1)]
 
             # Locate maximum pixel in 'NBIG' sized subimage
             goodrow = np.where(bigbox == bigbox)
             mx = np.max( bigbox[goodrow])     #Maximum pixel value in BIGBOX
-            mx_pos = np.where(bigbox.reshape(np.shape(bigbox)[0] * np.shape(bigbox)[1]) == mx)[0] #How many pixels have maximum value?
-            Nmax = len(mx_pos)
-            idx = mx_pos % nbig          # X coordinate of Max pixel
-            idy = mx_pos / nbig          # Y coordinate of Max pixel
+            mx_pos = np.where(bigbox == mx) #How many pixels have maximum value?
+            #mx_pos = np.where(bigbox.reshape(np.shape(bigbox)[0] * np.shape(bigbox)[1]) == mx)[0]
+            Nmax = len(mx_pos[0])
+            idx = mx_pos[1] #% nbig          # X coordinate of Max pixel
+            idy = mx_pos[0] #/ nbig          # Y coordinate of Max pixel
+
             if Nmax > 1:                 # More than 1 pixel at maximum?
                 idx = np.round(np.sum(idx)/Nmax)
                 idy = np.round(np.sum(idy)/Nmax)
@@ -137,8 +145,8 @@ def cntrd(img, x, y,
                 idx = idx[0]
                 idy = idy[0]
 
-            xmax = ix[i] - (nhalf+extendbox) + idx  #X coordinate in original image array
-            ymax = iy[i] - (nhalf+extendbox) + idy  #Y coordinate in original image array
+            xmax = ix[i] - (nhalf+Xextendbox) + idx  #X coordinate in original image array
+            ymax = iy[i] - (nhalf+Yextendbox) + idy  #Y coordinate in original image array
         else:
             xmax = ix[i]
             ymax = iy[i]
