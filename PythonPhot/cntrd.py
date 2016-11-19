@@ -36,7 +36,7 @@ def cntrd(img, x, y,
                        a half width equal to 1.5 sigma  = 0.637* FWHM to find the
                        maximum pixel.    To search a larger area, set extendbox to
                        the number of pixels to enlarge the half-width of the box.
-                       A list/array of two coordinates defines a rectangle.
+                       A list/array of [X,Y] coordinates defines a rectangle.
                        Default is 0; prior to June 2004, the default was extendbox = 3
                        keepcenter - By default, CNTRD finds the maximum pixel in a box
                        centered on the input X,Y coordinates, and then extracts a new
