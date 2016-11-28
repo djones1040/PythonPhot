@@ -8,9 +8,9 @@ from . import make_2d,daoerf, rinter, pkfit, pkfit_noise
 from scipy import linalg
 
 try:
-    import pyfits
-except ImportError:
     import astropy.io.fits as pyfits
+except ImportError:
+    import pyfits
 
 def getpsf(image,xc,yc,
            apmag,sky,ronois,

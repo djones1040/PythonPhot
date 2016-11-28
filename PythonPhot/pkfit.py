@@ -63,7 +63,7 @@ RETURNS:
                squares solution, this will be flagged by setting NITER = -1.
 
 EXAMPLE:
-     import pyfits
+     from astropy.io import fits as pyfits
      from PyIDLPhot import pkfit
 
      # read in the FITS images

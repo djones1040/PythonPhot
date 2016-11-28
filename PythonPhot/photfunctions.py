@@ -11,9 +11,9 @@ the photometry routines (esp. useful for examining residuals after psf fitting)
 import os
 import numpy as np
 try:
-    import pyfits
-except ImportError:
     import astropy.io.fits as pyfits
+except ImportError:
+    import pyfits
 from .aper import aper
 from .cntrd import cntrd
 from .pkfit_norecenter import pkfit_class
@@ -432,8 +432,8 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
         if np.any(emptyapbias > 0) and verbose:
             print("WARNING: aperture flux may be biased. Empty aperture flux tests"
                   " found a significantly non-zero sky value not accounted for in "
-                  "measurement of the target flux:  \\"
-                  "Mean empty aperture flux in sky annulus = %s\\"
+                  "measurement of the target flux:  \n"
+                  "Mean empty aperture flux in sky annulus = %s\n"
                   % emptyapmeanflux +
                   "sigma of empty aperture flux distribution = %s"
                   % emptyapsigma)
