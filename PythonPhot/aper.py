@@ -5,6 +5,7 @@
 
 example call:
 
+from astropy.io import fits as pyfits
 from PythonPhot import aper
 import numpy as np
 image = pyfits.getdata(fits_filename)

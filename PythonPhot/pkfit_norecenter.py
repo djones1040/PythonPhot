@@ -59,8 +59,8 @@ RETURNS:
                squares solution, this will be flagged by setting NITER = -1.
 
 EXAMPLE:
-     import pyfits
-     from PyIDLPhot import pkfit_norecenter as pkfit
+     from astropy.io import fits as pyfits
+     from PythonPhot import pkfit_norecenter as pkfit
 
      # read in the FITS images
      image = pyfits.getdata(fits_filename)
