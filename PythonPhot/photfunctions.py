@@ -461,7 +461,7 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
         imagedat = addtoimarray(imagedat, psfmodel, [x, y],
                                 fluxscale=psfflux)
 
-    if debug > 1:
+    if debug is not None:
         import pdb
         pdb.set_trace()
 
