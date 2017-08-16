@@ -146,7 +146,7 @@ def mmm( sky_vector,
 
     # Compute mean and sigma (from the first pass).
 
-    skymed = 0.5*sky[(minimm+maximm+1)/2] + 0.5*sky[(minimm+maximm)/2 + 1] #median 
+    skymed = 0.5*sky[int((minimm+maximm+1)/2)] + 0.5*sky[int((minimm+maximm)/2 + 1)] #median 
     skymn = sum/(maximm-minimm)                            #mean       
     sigma = np.sqrt(sumsq/(maximm-minimm)-skymn**2)             #sigma          
     skymn = skymn + skymid         #Add median which was subtracted off earlier 
