@@ -282,11 +282,11 @@ def mmm( sky_vector,
             M = round(center+0.25)
             R = 0.25*readnoise
             while ((j > 0) and (k < nsky-1) and \
-                       ( ((sky[L] - sky[j]) < R) or ((sky[k] - sky[M]) < R))):
+                       ( ((sky[int(L)] - sky[int(j)]) < R) or ((sky[int(k)] - sky[int(M)]) < R))):
                 j -= 1
                 k += 1
 
-        skymed = np.sum(sky[j:k+1])/(k-j+1)
+        skymed = np.sum(sky[int(j):int(k+1)])/(k-j+1)
 
         #  If the mean is less than the median, then the problem of contamination
         #  is slight, and the mean is what we really want.
