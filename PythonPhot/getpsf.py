@@ -178,7 +178,7 @@ def getpsf(image,xc,yc,
             print('GETPSF: Star ',str(istar),' too near edge of frame.')
             continue
 
-        f = image[ly:uy+1,lx:ux+1] - sky[istar]  #Read in subarray, subtract off sky
+        f = image[int(ly):int(uy)+1,int(lx):int(ux)+1] - sky[istar]  #Read in subarray, subtract off sky
         
         # An integrated Gaussian function will be fit to the central part of the
         # stellar profile.  Initially, a 5x5 box centered on the centroid of the 
@@ -328,7 +328,7 @@ def getpsf(image,xc,yc,
         print(istar, xc[istar], yc[istar], mag[istar], sky[istar])
         print('')
 
-        f = image[ly:uy+1,lx:ux+1]
+        f = image[int(ly):int(uy)+1,int(lx):int(ux)+1]
         x = xc[istar]-lx   ;   y = yc[istar]-ly   
 
         pk = pkfit.pkfit_class(f,gauss,psf,ronois,phpadu)
