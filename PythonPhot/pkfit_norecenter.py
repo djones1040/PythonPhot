@@ -270,7 +270,7 @@ class pkfit_class:
         # random error (fluxerr above), separately defined for each pixel
         goodpix_mask = 1
         n_badpix_beforefit = 0
-        for iteration in xrange(maxiter):
+        for iteration in range(maxiter):
             bestfit_scale, cov = leastsq(errfunc, scale, args=goodpix_mask)
             scale = bestfit_scale[0]
             flux_resid_tofit = (flux_observed_tofit -
