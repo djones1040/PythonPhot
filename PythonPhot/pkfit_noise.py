@@ -36,8 +36,8 @@ PKFIT FUNCTION INPUTS:
                 included in the fit, scalar
 
 OPTIONAL PKFIT FUNCTION INPUTS:
-     xyout   - if True, return new x and y positions
-     maxiter - maximum iterations (default = 25)
+     xyout        - if True, return new x and y positions
+     maxiter      - maximum iterations (default = 25)
 
 INPUT-OUTPUT:
      scale  - the initial estimate of the brightness of the star,
@@ -160,10 +160,10 @@ class pkfit_class:
             niter = niter+1
 
             if isnan(x) or isnan(y):
-                scale=1000000.0;
-                errmag=100000
-                chi=100000
-                sharp=100000
+                scale=np.nan
+                errmag=np.nan
+                chi=np.nan
+                sharp=np.nan
                 if xyout:
                     return(errmag,chi,sharp,niter,scale,x,y)
                 else:
@@ -213,10 +213,10 @@ class pkfit_class:
             t = zeros([3,ngood])
 
             if not len(good[0]):
-                scale=1000000.0;
-                errmag=100000
-                chi=100000
-                sharp=100000
+                scale=np.nan
+                errmag=np.nan
+                chi=np.nan
+                sharp=np.nan
                 if xyout:
                     return(errmag,chi,sharp,niter,scale,x,y)
                 else:
@@ -311,8 +311,8 @@ class pkfit_class:
                 sbd=shape(badpix)
                 sdf=shape(df)
                 if sbd[0] == sdf[0]:
-                    scale=1000000.0
-                    errmag=100000
+                    scale=np.nan
+                    errmag=np.nan
                     if xyout:
                         return(errmag,chi,sharp,niter,scale,x,y)
                     else:
@@ -338,10 +338,10 @@ class pkfit_class:
             wt = 5./(5.+rsq/(1.-rsq))
             lilrho = where(rhosq <= 36.)[0]   #Include only pixels within 6 sigma of centroid
             if not len(lilrho):
-                scale=1000000.0
-                errmag=100000
-                sharp=100000
-                chi=100000
+                scale=np.nan
+                errmag=np.nan
+                sharp=np.nan
+                chi=np.nan
                 if xyout:
                     return(errmag,chi,sharp,niter,scale,x,y)
                 else:
@@ -400,10 +400,10 @@ class pkfit_class:
                 try:
                     c = linalg.inv(c)  #Invert the normal matrix
                 except:
-                    scale=1000000.0
-                    errmag=100000
-                    chi=100000
-                    sharp=100000
+                    scale=np.nan
+                    errmag=np.nan
+                    chi=np.nan
+                    sharp=np.nan
                     if xyout:
                         return(errmag,chi,sharp,niter,scale,x,y)
                     else:
