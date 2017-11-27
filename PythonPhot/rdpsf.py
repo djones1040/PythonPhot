@@ -44,7 +44,7 @@ def rdpsf(psfname):
     gauss=[gauss1,gauss2,gauss3,gauss4,gauss5]
 
     psfrad = hpsf['PSFRAD'] # Get PSF radius
-    npsf = 2*psfrad + 1 #hpsf['NAXIS1']            # Width of output array containing PSF
+    npsf = int(2*psfrad + 1) #hpsf['NAXIS1']            # Width of output array containing PSF
 
     psf = np.zeros([npsf,npsf])       # Create output array
     dx = np.arange(npsf,dtype='int') - psfrad    # Vector gives X distance from center of array

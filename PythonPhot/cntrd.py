@@ -177,7 +177,7 @@ def cntrd(img, x, y,
         sumc   = np.sum(w)
 
         # Find X centroid
-        deriv = np.roll(strbox,-1,axis=1) - strbox    #;Shift in X & subtract to get derivative
+        deriv = np.roll(strbox,-1,axis=1) - strbox.astype(float)    #;Shift in X & subtract to get derivative
         deriv = deriv[nhalf-ir:nhalf+ir+1,0:nbox-1] #;Don't want edges of the array
         deriv = np.sum( deriv, 0 )                    #    ;Sum X derivatives over Y direction
         sumd   = np.sum( w*deriv )
@@ -199,7 +199,7 @@ def cntrd(img, x, y,
         xcen[i] = xmax - dx    # X centroid in original array
 
         #  Find Y Centroid
-        deriv = np.roll(strbox,-1,axis=0) - strbox    # Shift in X & subtract to get derivative
+        deriv = np.roll(strbox,-1,axis=0) - strbox.astype(float)    # Shift in X & subtract to get derivative
         deriv = deriv[0:nbox-1,nhalf-ir:nhalf+ir+1]
         deriv = np.sum( deriv,1 )
         sumd =   np.sum( w*deriv )

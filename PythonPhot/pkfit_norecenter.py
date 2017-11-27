@@ -33,8 +33,8 @@ PKFIT FUNCTION INPUTS:
                 included in the fit, scalar
 
 OPTIONAL PKFIT FUNCTION INPUTS:
-     xyout   - if True, return new x and y positions
-     maxiter - maximum iterations (default = 25)
+     xyout        - if True, return new x and y positions
+     maxiter      - maximum iterations (default = 25)
 
 INPUT-OUTPUT:
      scale  - the initial estimate of the brightness of the star,
@@ -270,7 +270,7 @@ class pkfit_class:
         # random error (fluxerr above), separately defined for each pixel
         goodpix_mask = 1
         n_badpix_beforefit = 0
-        for iteration in xrange(maxiter):
+        for iteration in range(maxiter):
             bestfit_scale, cov = leastsq(errfunc, scale, args=goodpix_mask)
             scale = bestfit_scale[0]
             flux_resid_tofit = (flux_observed_tofit -
@@ -361,10 +361,10 @@ class pkfit_class:
             niter += 1
 
             if isnan(x) or isnan(y):
-                scale = 1000000.0
-                errmag = 100000
-                chi = 100000
-                sharp = 100000
+                scale = np.nan
+                errmag = np.nan
+                chi = np.nan
+                sharp = np.nan
                 return errmag, chi, sharp, niter, scale
 
             ixlo = int(x - radius)
@@ -413,10 +413,10 @@ class pkfit_class:
             t = zeros([3, ngood])
 
             if not len(good):
-                scale = 1000000.0
-                errmag = 100000
-                chi = 100000
-                sharp = 100000
+                scale = np.nan
+                errmag = np.nan
+                chi = np.nan
+                sharp = np.nan
                 return errmag, chi, sharp, niter, scale
 
             dx = dx[good % ixx]
@@ -427,10 +427,10 @@ class pkfit_class:
 
             # D. Jones - norecenter addition from Scolnic
             if len(dvdx) == 0:
-                scale = 1000000.0
-                errmag = 100000
-                chi = 100000
-                sharp = 100000
+                scale = np.nan
+                errmag = np.nan
+                chi = np.nan
+                sharp = np.nan
                 return errmag, chi, sharp, niter, scale
 
             if debug:
@@ -500,8 +500,8 @@ class pkfit_class:
                 sdf = shape(df)
                 # D. Jones - norecenter modification from Scolnic
                 if len(badpix) > 1 and len(badpix) == len(df):
-                    scale = 1000000.0
-                    errmag = 100000
+                    scale = np.nan
+                    errmag = np.nan
                     return errmag, chi, sharp, niter, scale
 
                 if nbad > 0:
@@ -519,10 +519,10 @@ class pkfit_class:
             # Include only pixels within 6 sigma of centroid
             lilrho = where(rhosq <= 36.)[0]
             if not len(lilrho):
-                scale = 1000000.0
-                errmag = 100000
-                sharp = 100000
-                chi = 100000
+                scale = np.nan
+                errmag = np.nan
+                sharp = np.nan
+                chi = np.nan
                 return errmag, chi, sharp, niter, scale
 
             rhosq[lilrho] *= 0.5
@@ -575,10 +575,10 @@ class pkfit_class:
                 try:
                     c = linalg.inv(c)  # Invert the normal matrix
                 except:
-                    scale = 1000000.0
-                    errmag = 100000
-                    chi = 100000
-                    sharp = 100000
+                    scale = np.nan
+                    errmag = np.nan
+                    chi = np.nan
+                    sharp = np.nan
                     return errmag, chi, sharp, niter, scale
 
             dt = matrix(v) * c  # Compute parameter corrections

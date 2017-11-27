@@ -37,8 +37,8 @@ PKFIT FUNCTION INPUTS:
                  the star.  Default = True.
 
 OPTIONAL PKFIT FUNCTION INPUTS:
-     xyout   - if True, return new x and y positions
-     maxiter - maximum iterations (default = 25)
+     xyout        - if True, return new x and y positions
+     maxiter      - maximum iterations (default = 25)
 
 INPUT-OUTPUT:
      scale  - the initial estimate of the brightness of the star,
@@ -157,10 +157,10 @@ class pkfit_class:
             niter = niter+1
 
             if isnan(x) or isnan(y):
-                scale=1000000.0;
-                errmag=100000
-                chi=100000
-                sharp=100000
+                scale=np.nan
+                errmag=np.nan
+                chi=np.nan
+                sharp=np.nan
                 if xyout:
                     return(errmag,chi,sharp,niter,scale,x,y)
                 else:
@@ -211,10 +211,10 @@ class pkfit_class:
             t = zeros([3,ngood])
 
             if not len(good[0]):
-                scale=1000000.0;
-                errmag=100000
-                chi=100000
-                sharp=100000
+                scale=np.nan
+                errmag=np.nan
+                chi=np.nan
+                sharp=np.nan
                 if xyout:
                     return(errmag,chi,sharp,niter,scale,x,y)
                 else:
@@ -302,8 +302,8 @@ class pkfit_class:
                 sbd=shape(badpix)
                 sdf=shape(df)
                 if sbd[0] == sdf[0]:
-                    scale=1000000.0
-                    errmag=100000
+                    scale=np.nan
+                    errmag=np.nan
                     if xyout:
                         return(errmag,chi,sharp,niter,scale,x,y)
                     else:
@@ -325,10 +325,10 @@ class pkfit_class:
             wt = 5./(5.+rsq/(1.-rsq))
             lilrho = where(rhosq <= 36.)[0]   #Include only pixels within 6 sigma of centroid
             if not len(lilrho):
-                scale=1000000.0
-                errmag=100000
-                chi=100000
-                sharp=100000
+                scale=np.nan
+                errmag=np.nan
+                chi=np.nan
+                sharp=np.nan
                 if xyout:
                     return(errmag,chi,sharp,niter,scale,x,y)
                 else:
@@ -367,9 +367,9 @@ class pkfit_class:
             c = zeros([3,3])
 
             lenwt = len(wt)
-            for kk in xrange(3):
+            for kk in range(3):
                 v[kk] = sum(df*t[kk,0:lenwt]*wt)
-                for ll in xrange(3): c[ll,kk] = sum(t[kk,0:lenwt]*t[ll,0:lenwt]*wt)
+                for ll in range(3): c[ll,kk] = sum(t[kk,0:lenwt]*t[ll,0:lenwt]*wt)
 
             # Compute the (robust) goodness-of-fit index CHI.
             # CHI is pulled toward its expected value of unity before being stored
@@ -385,20 +385,20 @@ class pkfit_class:
                     c = linalg.inv(c)  #Invert the normal matrix
                 except:
                     print('singular matrix')
-                    scale=1000000.0
-                    errmag=100000
-                    chi=100000
-                    sharp=100000
+                    scale=np.nan
+                    errmag=np.nan
+                    chi=np.nan
+                    sharp=np.nan
                     if xyout:
                         return(errmag,chi,sharp,niter,scale,x,y)
                     else:
                         return(errmag,chi,sharp,niter,scale)
             else:
                 print('infinite matrix')
-                scale=1000000.0
-                errmag=100000
-                chi=100000
-                sharp=100000
+                scale=np.nan
+                errmag=np.nan
+                chi=np.nan
+                sharp=np.nan
                 if xyout:
                     return(errmag,chi,sharp,niter,scale,x,y)
                 else:

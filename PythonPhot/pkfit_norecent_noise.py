@@ -38,7 +38,7 @@ PKFIT FUNCTION INPUTS:
                 included in the fit, scalar
 
 OPTIONAL PKFIT FUNCTION INPUTS:
-     maxiter - maximum iterations (default = 25)
+     maxiter      - maximum iterations (default = 25)
 
 INPUT-OUTPUT:
      scale  - the initial estimate of the brightness of the star,
@@ -131,7 +131,9 @@ class pkfit_class:
 
     def pkfit_norecent_noise(self,scale,x,y,sky,radius,
                              maxiter=25,
-                             debug=False):
+                             debug=False,
+                             returnchi2=False,
+                             verbose=False):
         f = self.f; gauss = self.gauss; psf = self.psf
         fnoise = self.fnoise; fmask = self.fmask
 
@@ -152,10 +154,13 @@ class pkfit_class:
             print('PKFIT: ITER  X      Y      SCALE    ERRMAG   CHI     SHARP')
             
         if isnan(x) or isnan(y):
-            scale=1000000.0;
-            errmag=100000
-            chi=100000
-            sharp=100000
+            scale=np.nan;
+            errmag=np.nan
+            chi=np.nan
+            sharp=np.nan
+            if returnchi2:
+                chi2=np.nan
+                return(errmag,chi,sharp,niter,scale)
             return(errmag,chi,sharp,niter,scale)
 
         loop=True
@@ -219,10 +224,15 @@ class pkfit_class:
 
             if not len(good[0]):
                 # D. Jones - modified from Scolnic
-                scale=1000000.0;
-                errmag=100000
-                chi=100000
-                sharp=100000
+                if verbose:
+                    print('Error : No good pixels')
+                scale=np.nan
+                errmag=np.nan
+                chi=np.nan
+                sharp=np.nan
+                if returnchi2:
+                    chi2 = np.nan
+                    return(errmag,chi,sharp,niter,scale,chi2)
                 return(errmag,chi,sharp,niter,scale)
 
             dx = dx[good[1]]# % ixx]
@@ -237,13 +247,23 @@ class pkfit_class:
 
         # D. Jones - modified from Scolnic
             if len(dvdx) == 0:
-                scale=1000000.0
-                errmag=100000
-                chi=100000
-                sharp=100000
+                if verbose:
+                    print('Error : PSF model derivatives failed')
+                scale=np.nan
+                errmag=np.nan
+                chi=np.nan
+                sharp=np.nan
+                if returnchi2:
+                    chi2=np.nan
+                    return(errmag,chi,sharp,niter,scale,chi2)
                 return(errmag,chi,sharp,niter,scale)
 
-            if debug: print('model created '); return(errmag,chi,sharp,niter,scale)
+            if debug: 
+                print('model created ')
+                if returnchi2:
+                    return(errmag,chi,sharp,niter,scale,chi2)
+                else:
+                    return(errmag,chi,sharp,niter,scale,chi2)
 
             t[0,:] = model
 
@@ -325,9 +345,14 @@ class pkfit_class:
                 # sbd=shape(badpix)
                 # sdf=shape(df)
                 if len(badpix) == len(df):
-                    scale=1000000.0
-                    errmag=100000
-                    chi=100000
+                    if verbose:
+                        print('Error : All pixels bad!')
+                    scale=np.nan
+                    errmag=np.nan
+                    chi=np.nan
+                    if returnchi2:
+                        chi2 = np.nan
+                        return(errmag,chi,sharp,niter,scale,chi2)
                     return(errmag,chi,sharp,niter,scale)
 
                 if nbad > 0:
@@ -350,11 +375,14 @@ class pkfit_class:
             wt = 5./(5.+rsq/(1.-rsq))
             lilrho = where(rhosq <= 36.)   #Include only pixels within 6 sigma of centroid
             if not len(lilrho[0]):
-                scale=1000000.0
-                errmag=100000
-                sharp=100000
+                scale=np.nan
+                errmag=np.nan
+                sharp=np.nan
                 # D. Jones added following Scolnic
-                chi=100000
+                chi=np.nan
+                chi2=np.nan
+                if returnchi2:
+                    return(errmag,chi,sharp,niter,scale,chi2)
                 return(errmag,chi,sharp,niter,scale)
 
             rhosq[lilrho[0]] = 0.5*rhosq[lilrho[0]]
@@ -378,6 +406,8 @@ class pkfit_class:
             # much smaller than the fitting radius, and which goes to zero for
             #  radii very near the fitting radius.
 
+            if returnchi2:
+                chi2 = sum(df[lilrho[0]]**2./sig)/(len(df[lilrho[0]])-1)
             chi = sum(wt*abs(relerr))
             sumwt = sum(wt)
 
@@ -385,10 +415,12 @@ class pkfit_class:
             # added from Scolnic
             if min(wt) > 100000:
                 print('wt too high')
-                scale=1000000.0
-                errmag=100000
-                chi=100000
-                sharp = 100000
+                scale=np.nan
+                errmag=np.nan
+                chi=np.nan
+                sharp = np.nan
+                if returnchi2:
+                    return(errmag,chi,sharp,niter,scale,chi2)
                 return(errmag,chi,sharp,niter,scale)
 
             if niter >= 2: #Reduce weight of a bad pixel
@@ -419,18 +451,20 @@ class pkfit_class:
                 try:
                     c = linalg.inv(c)  #Invert the normal matrix
                 except:
-                    scale=1000000.0
-                    errmag=100000
-                    chi=100000
-                    sharp=100000
+                    scale=np.nan
+                    errmag=np.nan
+                    chi=np.nan
+                    sharp=np.nan
+                    if returnchi2:
+                        return(errmag,chi,sharp,niter,scale,chi2)
                     return(errmag,chi,sharp,niter,scale)
 
             else:
                 print('infinite matrix')
-                scale=1000000.0
-                errmag=100000
-                chi=100000
-                sharp=100000
+                scale=np.nan
+                errmag=np.nan
+                chi=np.nan
+                sharp=np.nan
                 return(errmag,chi,sharp,niter,scale)
 
             dt = matrix(v)*c       #Compute parameter corrections
@@ -438,11 +472,14 @@ class pkfit_class:
         
             # D. Jones - added following Scolnic
             if isinf(c[0,0]):
-                print('infinite matrix')
-                scale=1000000.0
-                errmag=100000
-                chi=100000
-                sharp=100000
+                if verbose:
+                    print('Error : infinite matrix')
+                scale=np.nan
+                errmag=np.nan
+                chi=np.nan
+                sharp=np.nan
+                if returnchi2:
+                    return(errmag,chi,sharp,niter,scale,chi2)
                 return(errmag,chi,sharp,niter,scale)
 
             # In the beginning, the brightness of the star will not be permitted
@@ -489,7 +526,8 @@ class pkfit_class:
             if (redo and (errmag <= 1.9995) and (niter < maxiter) ): loop=True
             #        if sharp < -99.999: sharp = -99.999
             #        elif sharp > 99.999: sharp = 99.999
-            
+        if returnchi2:
+            return(errmag,chi,sharp,niter,scale,chi2)
         return(errmag,chi,sharp,niter,scale)
 
 def item_remove(index,array):
