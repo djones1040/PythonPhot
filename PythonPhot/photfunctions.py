@@ -200,7 +200,7 @@ def add_and_recover(imagedat, psfmodel, xy, fluxscale=1, psfradius=5,
         fluxpsf = scale * 10 ** (-0.4 * (psfmag - psfzpt))
     except RuntimeWarning:
         print("photfunctions.add_and_recover failed on RuntimeWarning")
-        fluxpsf = -99
+        fluxpsf = np.inf
     if cleanup:
         # remove the fake psf from the image
         imagedat = addtoimarray(imdatwithpsf, psfmodel, xy,
@@ -289,8 +289,8 @@ def showpkfit(imagedat, psfmodelfile, xyposition, stampsize, fluxscale,
 def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
                      apradpix=3, skyannpix=None, skyalgorithm='sigmaclipping',
                      setskyval=None, recenter_target=True, recenter_fakes=True,
-                     exptime=1, exact=True, ronoise=1, phpadu=1, verbose=False,
-                     debug=False):
+                     exptime=1, exact=True, ronoise=1, phpadu=1, showfit=False,
+                     verbose=False, debug=False):
     """  Measure the flux and flux uncertainty for a source at the given x,y
     position using both aperture and psf-fitting photometry.
 
@@ -372,6 +372,15 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
             print("PythonPhot.pkfit_norecenter failed.")
             psfflux = np.nan
 
+        if showfit:
+            showpkfit(imagedat, psfmodel, xy, psfradpix*5, psfflux)
+            from matplotlib import pyplot as plt
+            plt.show()
+            out = raw_input("Showing psf fit and residual image. "
+                            " Return to continue.")
+
+
+
         if np.isfinite(psfflux):
             # remove the target star from the image
             imagedat = addtoimarray(imagedat, psfmodel, [x, y],
@@ -398,14 +407,17 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
             if abs(fakefluxmean - psfflux) > fakefluxsigma and verbose:
                 print("WARNING: psf flux may be biased. Fake psf flux tests "
                       "found a significantly non-zero sky value not accounted for "
-                      "in measurement of the target flux:  \\"
-                      "Mean psf flux offset in sky annulus = %.3e\\" %
+                      "in measurement of the target flux:  \n"
+                      "Mean psf flux offset in sky annulus = %.3e\n" %
                       (fakefluxmean - psfflux) +
                       "sigma of fake flux distribution = %.3e" %
                       fakefluxsigma +
-                      "NOTE: this is included as a systematic error, added in "
+                      "\nNOTE: this is included as a systematic error, added in "
                       "quadrature to the psf flux err derived from fake psf "
                       "recovery.")
+            if debug:
+                import pdb
+                pdb.set_trace()
             psfflux_poissonerr = (poissonErr(psfflux * exptime, confidence=1) /
                                   exptime)
             if not np.isfinite(psfflux_poissonerr):
