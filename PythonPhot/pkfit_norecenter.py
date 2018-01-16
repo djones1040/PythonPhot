@@ -214,8 +214,8 @@ class pkfit_class:
         # Call the function dao_value to generate realized flux values
         # from the given psf model for each pixel position in the image
         # subarray that is within the fitting radius
-        dx = dx[i_tofit % ixx]
-        dy = dy[i_tofit / ixx]
+        dx = dx[(i_tofit % ixx).astype(int)]
+        dy = dy[(i_tofit / ixx).astype(int)]
         flux_model_tofit = dao_value.dao_value(dx, dy, gauss, psf, deriv=False)
 
         # Set the weight of each pixel for the least squares fitter based on
