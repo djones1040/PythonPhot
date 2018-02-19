@@ -399,7 +399,7 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
             igoodmag = where (apflux > 0.0)[0]  # Are there any valid integrated fluxes?
             Ngoodmag = len(igoodmag)
             if ( Ngoodmag > 0 ) : # convert valid fluxes to mags
-                apmagerr[igoodmag] = 1.0857*apfluxerr[igoodmag]/apflux[igoodmag]   #1.0857 = log(10)/2.5
+                apmagerr[igoodmag] = 1.0857*apfluxerr[igoodmag]/apflux[igoodmag]   #1.0857 = 2.5/log(10)
                 apmag[igoodmag] =  zeropoint-2.5*np.log10(apflux[igoodmag])
             break # Closing the 'while True' loop.
 
