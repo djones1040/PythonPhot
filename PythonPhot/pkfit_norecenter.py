@@ -33,8 +33,8 @@ PKFIT FUNCTION INPUTS:
                 included in the fit, scalar
 
 OPTIONAL PKFIT FUNCTION INPUTS:
-     xyout        - if True, return new x and y positions
-     maxiter      - maximum iterations (default = 25)
+     xyout   - if True, return new x and y positions
+     maxiter - maximum iterations (default = 25)
 
 INPUT-OUTPUT:
      scale  - the initial estimate of the brightness of the star,
@@ -117,12 +117,13 @@ arange, matrix, exp, sum, isinf, median, ones, bool = \
 
 
 class pkfit_class:
-    def __init__(self, image, gauss, psf, ronois, phpadu):
+    def __init__(self, image, gauss, psf, ronois, phpadu, weightim=None):
         self.f = image
         self.gauss = gauss
         self.psf = psf
         self.ronois = ronois
         self.phpadu = phpadu
+        self.w = weightim
 
     def pkfit_fast_norecenter(self, scale, x, y, sky, radius,
                               debug=False, maxiter=25, sigclip=4):
@@ -146,6 +147,7 @@ class pkfit_class:
         assert not (isnan(x) or isnan(y))
 
         f = self.f
+        w = self.w
         gauss = self.gauss
         psf = self.psf
 
@@ -211,6 +213,12 @@ class pkfit_class:
         flux_observed_tofit = (
             f[iylo:iyhi + 1, ixlo:ixhi + 1].ravel()[[i_tofit]])
 
+        # Extract a subarray with the observed weight for all pixels within the
+        # fitting radius of the center of the target star
+        if w is not None:
+            weight_input = (
+                w[iylo:iyhi + 1, ixlo:ixhi + 1].ravel()[[i_tofit]])
+
         # Call the function dao_value to generate realized flux values
         # from the given psf model for each pixel position in the image
         # subarray that is within the fitting radius
@@ -218,11 +226,15 @@ class pkfit_class:
         dy = dy[(i_tofit / ixx).astype(int)]
         flux_model_tofit = dao_value.dao_value(dx, dy, gauss, psf, deriv=False)
 
-        # Set the weight of each pixel for the least squares fitter based on
-        # its distance from the fixed center of the target star:
-        # weight ~ 1 at the center, and diminishes rapidly to ~0 at the edge
-        # of the fitting radius.
-        weight_tofit = (5. / (5. + rsq / (1. - rsq))).ravel()[i_tofit]
+        if w is not None:
+            # User-provided weight map
+            weight_tofit = weight_input #* (5. / (5. + rsq / (1. - rsq))).ravel()[i_tofit]
+        else:
+            # Set the weight of each pixel for the least squares fitter based on
+            # its distance from the fixed center of the target star:
+            # weight ~ 1 at the center, and diminishes rapidly to ~0 at the edge
+            # of the fitting radius.
+            weight_tofit = (5. / (5. + rsq / (1. - rsq))).ravel()[i_tofit]
 
         flux_observed_tofit_weighted_minussky = \
             flux_observed_tofit * weight_tofit - sky
