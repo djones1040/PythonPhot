@@ -290,7 +290,7 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
                      apradpix=3, skyannpix=None, skyalgorithm='sigmaclipping',
                      setskyval=None, recenter_target=True, recenter_fakes=True,
                      exptime=1, exact=True, ronoise=1, phpadu=1, showfit=False,
-                     verbose=False, debug=False):
+                     verbose=False, debug=False, weightim=None):
     """  Measure the flux and flux uncertainty for a source at the given x,y
     position using both aperture and psf-fitting photometry.
 
@@ -362,7 +362,7 @@ def get_flux_and_err(imagedat, psfmodel, xy, ntestpositions=100, psfradpix=3,
         # set up the psf model realization
         gaussparam, lookuptable, psfmag, psfzpt = rdpsfmodel(psfmodel)
         psfmodel = [gaussparam, lookuptable, psfmag, psfzpt]
-        pk = pkfit_class(imagedat, gaussparam, lookuptable, ronoise, phpadu)
+        pk = pkfit_class(imagedat, gaussparam, lookuptable, ronoise, phpadu, weightim)
 
         # do the psf fitting
         try:
