@@ -136,7 +136,7 @@ def aper(image,xc,yc, phpadu=1, apr=5, zeropoint=25,
         xc = np.array([xc])
         yc = np.array([yc])
     if isinstance(xc, list): xc = np.array(xc)
-    if isinstance(yc, list): xc = np.array(yc)    
+    if isinstance(yc, list): yc = np.array(yc)    
     assert len(xc) == len(yc), 'xc and yc arrays must be identical length.'
 
     if not np.iterable( apr ) :
