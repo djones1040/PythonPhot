@@ -110,11 +110,11 @@ from scipy import linalg
 from . import dao_value
 
 sqrt,where,abs,shape,zeros,array,isnan,\
-    arange,matrix,exp,sum,isinf,median,ones,bool = \
+    arange,matrix,exp,sum,isinf,median,ones = \
     np.sqrt,np.where,np.abs,np.shape,\
     np.zeros,np.array,np.isnan,\
     np.arange,np.matrix,np.exp,\
-    np.sum,np.isinf,np.median,np.ones,np.bool
+    np.sum,np.isinf,np.median,np.ones
 
 class pkfit_class:
 
